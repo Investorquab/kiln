@@ -1,0 +1,26 @@
+{
+  "work_order_id": "WO-TABLEKEEPER-001",
+  "workload": "tablekeeper",
+  "requirement": "Build a clean-room reservation service that prevents double-booking and duplicate side effects under concurrency, retries, equivalent time representations, and invalid input.",
+  "acceptance": [
+    "Overlapping reservations for the same resource cannot both commit.",
+    "A retry with the same idempotency key does not create a second side effect.",
+    "The same instant represented with different timezone offsets is treated consistently.",
+    "Invalid time intervals are rejected without creating state.",
+    "The implementation can be started from the documented clean-container contract."
+  ],
+  "constraints": [
+    "Treat the requirement as workload input, not an agent mandate.",
+    "Do not encode Tablekeeper-specific language into generic agent mandates.",
+    "Every stage must hand off an inspectable artifact.",
+    "Verification must be reproducible from the repository."
+  ],
+  "evidence_required": [
+    "architect-plan",
+    "invariant-model",
+    "build-handoff",
+    "adversarial-report",
+    "repair-report",
+    "independent-verification"
+  ]
+}
