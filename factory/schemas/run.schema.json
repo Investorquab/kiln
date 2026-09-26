@@ -1,21 +1,47 @@
 {
-  "$schema":"https://json-schema.org/draft/2020-12/schema",
-  "title":"Kiln Factory Run",
-  "type":"object",
-  "required":["run_id","requirement","stages"],
-  "properties":{
-    "run_id":{"type":"string"},
-    "requirement":{"type":"string"},
-    "stages":{"type":"array","items":{
-      "type":"object",
-      "required":["name","status","artifact"],
-      "properties":{
-        "name":{"type":"string"},
-        "status":{"enum":["pending","running","passed","failed","blocked"]},
-        "artifact":{"type":["string","null"]}
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kiln Factory Run",
+  "type": "object",
+  "required": ["run_id", "work_order", "requirement", "created_at", "updated_at", "status", "stages", "evidence"],
+  "properties": {
+    "run_id": {"type": "string"},
+    "work_order": {"type": "string"},
+    "requirement": {"type": "string"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"},
+    "status": {"enum": ["running", "repair_required", "proved"]},
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status", "artifact", "attempt"],
+        "properties": {
+          "name": {"enum": ["architect", "modeler", "builder", "adversary", "repairer", "verifier"]},
+          "status": {"enum": ["pending", "passed", "failed"]},
+          "artifact": {"type": ["string", "null"]},
+          "attempt": {"type": "integer", "minimum": 0}
+        },
+        "additionalProperties": false
       },
-      "additionalProperties":false
-    }}
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["event_id", "at", "stage", "status", "artifact", "attempt"],
+        "properties": {
+          "event_id": {"type": "string"},
+          "at": {"type": "string"},
+          "stage": {"enum": ["architect", "modeler", "builder", "adversary", "repairer", "verifier"]},
+          "status": {"enum": ["passed", "failed"]},
+          "artifact": {"type": "string"},
+          "attempt": {"type": "integer", "minimum": 1}
+        },
+        "additionalProperties": false
+      }
+    }
   },
-  "additionalProperties":false
+  "additionalProperties": false
 }
