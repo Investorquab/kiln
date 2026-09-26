@@ -1,0 +1,12 @@
+{
+  "run_id": "replace-with-live-run-id",
+  "requirement": "replace-with-workload-requirement",
+  "stages": [
+    {"name":"architect","status":"pending","artifact":null},
+    {"name":"modeler","status":"pending","artifact":null},
+    {"name":"builder","status":"pending","artifact":null},
+    {"name":"adversary","status":"pending","artifact":null},
+    {"name":"repairer","status":"pending","artifact":null},
+    {"name":"verifier","status":"pending","artifact":null}
+  ]
+}
