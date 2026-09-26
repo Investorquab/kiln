@@ -1,0 +1,46 @@
+{
+  "stage": "adversary",
+  "status": "passed",
+  "source": "local executable verification rehearsal",
+  "work_order": "WO-TABLEKEEPER-001",
+  "attacks": [
+    {
+      "name": "concurrency",
+      "target": "INV-001",
+      "requests": 50,
+      "created": 1,
+      "conflicts": 49,
+      "unexpected": 0,
+      "result": "passed"
+    },
+    {
+      "name": "idempotency",
+      "target": "INV-002",
+      "replay_statuses": [201, 201, 201],
+      "unique_reservation_ids": 1,
+      "tampered_replay_status": 409,
+      "result": "passed"
+    },
+    {
+      "name": "timezone",
+      "target": "INV-003",
+      "first": 201,
+      "equivalent": 409,
+      "result": "passed"
+    },
+    {
+      "name": "invalid_input",
+      "target": "INV-004",
+      "status_code": 422,
+      "created_records": 0,
+      "result": "passed"
+    }
+  ],
+  "summary": {
+    "attacks": 4,
+    "failures": 0,
+    "result": "ATTACK BATCH PASSED"
+  },
+  "handoff": "Verifier independently reproduces the attack batch.",
+  "note": "These results are from local executable verification. They are not evidence of a BAND Desktop-generated adversarial stage."
+}
