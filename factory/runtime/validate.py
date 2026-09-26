@@ -89,6 +89,13 @@ def main() -> int:
         errors.append("local verification report: stage must be verifier")
     if not isinstance(local_report.get("attacks"), list) or len(local_report["attacks"]) != 4:
         errors.append("local verification report: expected four attack results")
+    if local_report.get("source") != "local executable verification":
+        errors.append("local verification report: source must identify executable local verification")
+    attack_names = [item.get("name") for item in local_report.get("attacks", []) if isinstance(item, dict)]
+    if attack_names != ["concurrency", "idempotency", "timezone", "invalid_input"]:
+        errors.append("local verification report: attack order/names are invalid")
+    if any(item.get("status") != "passed" for item in local_report.get("attacks", []) if isinstance(item, dict)):
+        errors.append("local verification report: every attack must pass")
     summary = local_report.get("summary", {})
     errors.extend(
         check_keys(
