@@ -1,14 +1,19 @@
 # Kiln Architecture
 
-Kiln separates the generic software-factory process from the demonstration workload.
+Kiln separates the software-building loop from the workload used to demonstrate it.
 
-1. Architect — turns requirements into an implementation plan and identifies guarantees.
-2. Modeler — identifies mutable state, legal transitions, dependencies, and invariants.
-3. Builder — implements assigned work and provides evidence.
-4. Adversary — generates scenarios intended to break declared invariants.
-5. Repairer — diagnoses verified failures, makes the smallest corrective change, and adds regression coverage.
-6. Verifier — independently reproduces relevant scenarios and reports evidence.
+## Agent seats
+1. Architect — requirements and implementation plan.
+2. Modeler — state, transitions, invariants.
+3. Builder — implementation and tests.
+4. Adversary — hostile scenarios and executable attacks.
+5. Repairer — root-cause diagnosis and regression fixes.
+6. Verifier — independent reproduction and evidence review.
 
-The first workload is a reservation system. Its central guarantee is that conflicting reservations cannot both be committed for the same resource and time window, including under concurrency and retries.
+Each mandate is generic and workload-agnostic.
 
-Factory mandates remain workload-agnostic.
+## Evidence flow
+
+Requirement → Plan → Model/Invariants → Implementation → Attacks → Repair/Regression → Independent Verification → Evidence
+
+The Tablekeeper reservation service is the first demonstration workload. The factory protocol is the product.

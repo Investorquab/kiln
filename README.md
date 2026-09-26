@@ -1,16 +1,44 @@
 # Kiln
 
-Kiln is an autonomous software factory that turns software requirements into working software, attacks its own implementation, repairs verified failures, and independently verifies the result.
+**Kiln is an autonomous software factory that builds software, attacks its own implementation, repairs failures, and independently verifies the result.**
 
-## Core loop
+Core loop:
 
-`Requirement → Model → Build → Attack → Repair → Verify → Evidence`
+**Requirement → Model → Build → Attack → Repair → Verify → Evidence**
 
-The first demonstration workload is a clean-room reservation system inspired by Tablekeeper. The workload is deliberately separate from Kiln's generic factory mandates.
+## Demonstration workload
 
-## Repository layout
+Kiln currently uses a clean-room Tablekeeper-style reservation service to demonstrate concurrency, idempotency, timezone, and transactional correctness.
 
-- `app/` — demonstration application
-- `factory/` — generic factory contracts and agent mandates
-- `verification/` — invariant and adversarial verification
-- `docs/` — architecture and build notes
+## Local backend
+
+```powershell
+docker compose up --build
+```
+
+Backend health:
+
+```powershell
+curl http://localhost:8000/health
+```
+
+## Verification
+
+With the backend running and Python dependencies available:
+
+```powershell
+python verification/run_all.py
+```
+
+The verification harness is deliberately adversarial. It sends independent concurrent requests and replay scenarios against the live service.
+
+## Factory structure
+
+- `factory/mandates/` — generic agent mandates
+- `factory/protocols/` — stage contracts
+- `factory/schemas/` — machine-readable artifact schemas
+- `factory/artifacts/` — example planning and attack artifacts
+- `verification/` — executable attacks and reports
+- `app/backend/` — demonstration workload
+
+See `docs/DEMO.md` for the intended hackathon walkthrough.

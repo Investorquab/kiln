@@ -1,0 +1,36 @@
+name: Kiln CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: kiln
+          POSTGRES_USER: kiln
+          POSTGRES_PASSWORD: kiln
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kiln -d kiln"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
+    defaults:
+      run:
+        working-directory: app/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+        env:
+          DATABASE_URL: postgresql://kiln:kiln@localhost:5432/kiln
