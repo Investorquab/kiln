@@ -31,12 +31,14 @@ Open:
 - http://localhost:8000/docs — backend API
 - http://localhost:8000/health — health check
 
-With the stack running:
+With the stack running, install the verification runner dependency:
 
 ```powershell
-python -m pip install httpx
+python -m pip install -r verification/requirements.txt
 python verification/run_all.py
 ```
+
+Each verification run receives a unique run ID, so repeated runs do not collide with evidence from earlier runs.
 
 The runner fails closed: any unexpected response or failed attack produces a non-zero exit code.
 
