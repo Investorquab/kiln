@@ -1,35 +1,275 @@
 {
   "stage": "modeler",
-  "status": "passed",
-  "source": "local factory rehearsal",
-  "work_order": "WO-TABLEKEEPER-001",
-  "input": "factory/artifacts/architect-plan.json",
+  "status": "modeled",
+  "validation_status": "passed",
+  "source": "repository analysis; no live BAND run claimed",
+  "work_order": {
+    "id": "WO-TABLEKEEPER-001",
+    "path": "factory/work_orders/tablekeeper.json"
+  },
+  "run_reference": {
+    "id": null,
+    "status": "unavailable; no active run ledger exists in factory/runs/"
+  },
+  "inputs": [
+    "factory/work_orders/tablekeeper.json",
+    "factory/artifacts/architect-plan.json",
+    "factory/schemas/invariants.tablekeeper.json",
+    "app/backend/app/main.py",
+    "factory/runtime/validate.py",
+    "verification/attacks/concurrency.py",
+    "verification/attacks/idempotency.py",
+    "verification/attacks/timezone.py",
+    "verification/attacks/invalid_input.py"
+  ],
+  "output": "factory/artifacts/invariant-model.json",
+  "mutable_state": [
+    {
+      "name": "reservation record",
+      "storage": "PostgreSQL reservations row",
+      "fields": [
+        "id",
+        "resource_id",
+        "start_at",
+        "end_at",
+        "guest_name",
+        "idempotency_key"
+      ],
+      "lifecycle": "Absent -> inserted within transaction -> committed; a failed transaction returns to Absent.",
+      "mutability": "Rows are created by POST /reservations; this API exposes no update or delete transition."
+    },
+    {
+      "name": "resource occupancy",
+      "storage": "Derived from committed reservation rows; not a separate mutable record.",
+      "fields": [
+        "resource_id",
+        "start_at",
+        "end_at"
+      ],
+      "lifecycle": "Changes only when a reservation commits.",
+      "mutability": "The resource-scoped transaction lock serializes the overlap-check and insert critical section."
+    },
+    {
+      "name": "idempotency binding",
+      "storage": "The unique idempotency_key column on the reservation row.",
+      "fields": [
+        "idempotency_key",
+        "canonical request payload",
+        "reservation id"
+      ],
+      "lifecycle": "Unused -> bound to one committed reservation; an exact replay reads and returns that binding without writing.",
+      "mutability": "A key cannot be rebound to a different payload; the database unique constraint and key-scoped lock serialize creation."
+    },
+    {
+      "name": "transaction-scoped locks",
+      "storage": "PostgreSQL advisory transaction locks; ephemeral, not committed application state.",
+      "fields": [
+        "resource lock derived from resource_id",
+        "idempotency lock derived from Idempotency-Key"
+      ],
+      "lifecycle": "Acquired during the transaction and released on commit or rollback."
+    }
+  ],
+  "legal_transitions": [
+    {
+      "entity": "reservation request",
+      "from": "received",
+      "event": "request validation fails (including missing/naive timestamps or end_at <= start_at)",
+      "guard": "Pydantic validation fails or UTC normalization/interval validation rejects the request.",
+      "to": "rejected",
+      "writes": [],
+      "result": "HTTP 422; no reservation or idempotency binding is committed."
+    },
+    {
+      "entity": "reservation request",
+      "from": "received",
+      "event": "valid request is normalized",
+      "guard": "Fields pass request validation; both timestamps are timezone-aware and end_at is later than start_at after UTC conversion.",
+      "to": "normalized",
+      "writes": [],
+      "result": "Continue inside a database transaction."
+    },
+    {
+      "entity": "reservation request",
+      "from": "normalized",
+      "event": "idempotency key already exists",
+      "guard": "Stored resource_id, UTC start_at/end_at, and guest_name all equal the normalized request.",
+      "to": "replayed",
+      "writes": [],
+      "result": "Return the existing reservation; do not create a new row."
+    },
+    {
+      "entity": "reservation request",
+      "from": "normalized",
+      "event": "idempotency key already exists",
+      "guard": "Any stored request field differs from the normalized request.",
+      "to": "rejected_key_reuse",
+      "writes": [],
+      "result": "HTTP 409; transaction leaves committed state unchanged."
+    },
+    {
+      "entity": "reservation request",
+      "from": "normalized",
+      "event": "overlap query finds a reservation",
+      "guard": "Same resource and half-open interval intersection is non-empty.",
+      "to": "rejected_overlap",
+      "writes": [],
+      "result": "HTTP 409; transaction leaves committed state unchanged."
+    },
+    {
+      "entity": "reservation request",
+      "from": "normalized",
+      "event": "key is unused and overlap query is empty",
+      "guard": "Resource and idempotency locks are held through overlap check and insert.",
+      "to": "insert_pending",
+      "writes": [
+        "Insert one reservation row inside the transaction."
+      ],
+      "result": "Not visible as committed state until the transaction commits."
+    },
+    {
+      "entity": "reservation request",
+      "from": "insert_pending",
+      "event": "transaction exits successfully",
+      "guard": "Insert and transaction commit succeed.",
+      "to": "committed",
+      "writes": [
+        "One immutable reservation row",
+        "One idempotency-key binding through that row"
+      ],
+      "result": "Return the created reservation."
+    },
+    {
+      "entity": "reservation request",
+      "from": "insert_pending",
+      "event": "an exception aborts the transaction",
+      "guard": "Any insert or transaction failure occurs before successful commit.",
+      "to": "rolled_back",
+      "writes": [],
+      "result": "No committed reservation or idempotency binding remains."
+    }
+  ],
+  "dependencies": [
+    {
+      "component": "Pydantic request validation",
+      "role": "Reject malformed or out-of-bounds request fields before database mutation."
+    },
+    {
+      "component": "canonical_utc",
+      "role": "Require timezone-aware timestamps and normalize instants to UTC before ordering, idempotency comparison, and persistence."
+    },
+    {
+      "component": "PostgreSQL transaction",
+      "role": "Make overlap check and insert atomic; exceptions must roll back pending writes."
+    },
+    {
+      "component": "resource-scoped advisory transaction lock",
+      "role": "Serialize concurrent overlap-check/insert paths for the same resource."
+    },
+    {
+      "component": "idempotency-scoped advisory transaction lock and UNIQUE constraint",
+      "role": "Serialize same-key lookups and guarantee at most one committed row per key, including requests for different resources."
+    },
+    {
+      "component": "reservations table CHECK and timestamptz columns",
+      "role": "Enforce end_at > start_at at storage and persist absolute instants."
+    },
+    {
+      "component": "verification attack suite",
+      "role": "Exercise concurrency, replay/key reuse, timezone equivalence, and invalid-input/no-state-change behavior against a running service."
+    }
+  ],
   "invariants": [
     {
       "id": "INV-001",
-      "statement": "Two committed reservations for the same resource must not overlap.",
+      "statement": "For any two committed reservations A and B with the same resource_id, their half-open intervals [start_at, end_at) are disjoint: A.end_at <= B.start_at or B.end_at <= A.start_at. Adjacent reservations are legal.",
       "severity": "critical",
-      "executable_check": "concurrent conflicting requests"
+      "enforcement_basis": [
+        "Resource-scoped transaction lock covers the overlap query and insert.",
+        "Overlap predicate is existing.start_at < requested.end_at AND requested.start_at < existing.end_at."
+      ],
+      "witness": "Run the concurrent conflicting-reservations attack; assert no two overlapping requests for one resource both commit, and assert adjacent intervals can both commit."
     },
     {
       "id": "INV-002",
-      "statement": "Retrying an operation with the same idempotency key must not create a second reservation.",
+      "statement": "Each committed Idempotency-Key maps to exactly one canonical request payload and at most one reservation. Replaying that key with the same resource_id, UTC start_at, UTC end_at, and guest_name returns the original reservation id without another insert; changing any payload field is rejected without changing state.",
       "severity": "critical",
-      "executable_check": "same key replay"
+      "enforcement_basis": [
+        "Idempotency-scoped transaction lock serializes lookup/creation.",
+        "reservations.idempotency_key is UNIQUE.",
+        "Existing key is compared against all request fields before replay."
+      ],
+      "witness": "Run same-key concurrent/replay and key-reuse cases; assert a stable reservation id and row count for exact replay, and HTTP 409 with unchanged rows for different payload."
     },
     {
       "id": "INV-003",
-      "statement": "Equivalent timezone representations of the same instant must be treated as the same interval.",
+      "statement": "Timezone-aware datetime values denoting the same instant have identical canonical UTC values and therefore produce identical interval, overlap, and idempotency comparisons, independent of their input offsets.",
       "severity": "high",
-      "executable_check": "UTC and offset representations"
+      "enforcement_basis": [
+        "canonical_utc converts aware request timestamps to timezone.utc before database access.",
+        "Database columns use timestamptz."
+      ],
+      "witness": "Run UTC and non-zero-offset representations of the same interval; assert same-key replay returns the original id and equivalent instants are not treated as distinct availability."
     },
     {
       "id": "INV-004",
-      "statement": "A failed reservation attempt must not leave a partial committed reservation.",
+      "statement": "Invalid input, key-reuse rejection, overlap rejection, or a failed transaction must not leave any committed reservation or idempotency binding from that attempt.",
       "severity": "critical",
-      "executable_check": "invalid input and transaction rollback"
+      "enforcement_basis": [
+        "Request and interval validation precede reservation insertion.",
+        "The overlap check and insert run inside one transaction.",
+        "Raised HTTPException or database exceptions abort pending transactional writes."
+      ],
+      "witness": "Snapshot reservations before and after invalid/missing-timezone/reversed-interval attempts and injected transaction failure; assert HTTP rejection and no new row or key binding."
     }
   ],
-  "handoff": "Builder implements the approved model; Adversary targets every critical guarantee.",
-  "note": "This artifact documents a local rehearsal and is not evidence of a BAND Desktop-generated stage."
+  "commands_and_evidence": [
+    {
+      "command": "python factory/runtime/validate.py",
+      "status": "passed",
+      "output": [
+        "ARTIFACT VALIDATION PASSED",
+        "work_order=valid",
+        "handoff=valid",
+        "verification=valid",
+        "local_verification=valid",
+        "run_template=valid"
+      ]
+    },
+    {
+      "command": "python verification/run_all.py",
+      "status": "not_run",
+      "output": "This model stage did not start the service or execute the behavioral attacks; prior local-rehearsal evidence is not attributed to this handoff."
+    }
+  ],
+  "evidence_basis": [
+    {
+      "source": "app/backend/app/main.py",
+      "locations": [
+        "ReservationRequest and Reservation models",
+        "canonical_utc",
+        "reservations table definition",
+        "create_reservation validation, advisory locks, replay comparison, half-open overlap query, insert, and transaction handling"
+      ]
+    },
+    {
+      "source": "factory/schemas/invariants.tablekeeper.json",
+      "locations": [
+        "INV-001 through INV-004 acceptance checks"
+      ]
+    },
+    {
+      "source": "factory/runtime/validate.py",
+      "locations": [
+        "Current validator checks the work order, sample handoffs, local verification record, and run template; it does not validate this invariant-model artifact's shape."
+      ]
+    }
+  ],
+  "unresolved_risks": [
+    "No active run ledger or run id is present in factory/runs/; this artifact cannot be attributed to or used to complete a specific run until one is initialized.",
+    "The validator does not check invariant-model fields or its schema, so its pass is a repository artifact check, not proof that these invariants hold at runtime.",
+    "This stage did not run the service or attacks. Runtime behavior and failure rollback still require adversarial execution against the deployed database.",
+    "Atomicity assumes all writers use the same PostgreSQL database and follow the resource-lock/check/insert protocol; out-of-band writers are not constrained by a database exclusion constraint."
+  ],
+  "handoff": "Builder: implement and test INV-001 through INV-004 against PostgreSQL; Adversary: execute the named attack suite and preserve exact responses and row counts."
 }
