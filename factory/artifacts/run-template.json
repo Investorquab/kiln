@@ -1,12 +1,17 @@
 {
   "run_id": "replace-with-live-run-id",
+  "work_order": "WO-EXAMPLE-001",
   "requirement": "replace-with-workload-requirement",
+  "created_at": "replace-with-timestamp",
+  "updated_at": "replace-with-timestamp",
+  "status": "running",
   "stages": [
-    {"name":"architect","status":"pending","artifact":null},
-    {"name":"modeler","status":"pending","artifact":null},
-    {"name":"builder","status":"pending","artifact":null},
-    {"name":"adversary","status":"pending","artifact":null},
-    {"name":"repairer","status":"pending","artifact":null},
-    {"name":"verifier","status":"pending","artifact":null}
-  ]
+    {"name":"architect","status":"pending","artifact":null,"attempt":0},
+    {"name":"modeler","status":"pending","artifact":null,"attempt":0},
+    {"name":"builder","status":"pending","artifact":null,"attempt":0},
+    {"name":"adversary","status":"pending","artifact":null,"attempt":0},
+    {"name":"repairer","status":"pending","artifact":null,"attempt":0},
+    {"name":"verifier","status":"pending","artifact":null,"attempt":0}
+  ],
+  "evidence": []
 }
