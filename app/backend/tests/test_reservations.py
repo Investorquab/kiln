@@ -102,7 +102,7 @@ def test_concurrent_same_slot_has_single_winner():
     assert statuses.count(409) == 19
 
 
-def test_same_idempotency_key_across_resources_is_rejected(client):
+def test_same_idempotency_key_across_resources_is_rejected():
     first = {
         "resource_id": "key-race-a",
         "start_at": "2026-10-01T18:00:00+01:00",
