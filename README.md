@@ -2,43 +2,55 @@
 
 **Kiln is an autonomous software factory that builds software, attacks its own implementation, repairs failures, and independently verifies the result.**
 
-Core loop:
+> **Build it. Break it. Prove it.**
+
+## Core loop
 
 **Requirement → Model → Build → Attack → Repair → Verify → Evidence**
 
 ## Demonstration workload
 
-Kiln currently uses a clean-room Tablekeeper-style reservation service to demonstrate concurrency, idempotency, timezone, and transactional correctness.
+Kiln uses a clean-room Tablekeeper-style reservation service to demonstrate:
+- concurrency safety
+- idempotent retries
+- timezone normalization
+- invalid-input rejection
 
-## Local backend
+The workload is the demonstration. **The factory is the product.**
+
+## Quick start
 
 ```powershell
+git clone https://github.com/Investorquab/kiln.git
+cd kiln
 docker compose up --build
 ```
 
-Backend health:
+Open:
+- http://localhost:3000 — Kiln interface
+- http://localhost:8000/docs — backend API
+- http://localhost:8000/health — health check
+
+With the stack running:
 
 ```powershell
-curl http://localhost:8000/health
-```
-
-## Verification
-
-With the backend running and Python dependencies available:
-
-```powershell
+python -m pip install httpx
 python verification/run_all.py
 ```
 
-The verification harness is deliberately adversarial. It sends independent concurrent requests and replay scenarios against the live service.
+The runner fails closed: any unexpected response or failed attack produces a non-zero exit code.
 
-## Factory structure
+## Factory
 
-- `factory/mandates/` — generic agent mandates
-- `factory/protocols/` — stage contracts
-- `factory/schemas/` — machine-readable artifact schemas
-- `factory/artifacts/` — example planning and attack artifacts
-- `verification/` — executable attacks and reports
-- `app/backend/` — demonstration workload
+The BAND Desktop room uses generic mandates for Architect, Modeler, Builder, Adversary, Repairer, and Verifier. Workload-specific context is passed as task artifacts rather than encoded into the mandates.
 
-See `docs/DEMO.md` for the intended hackathon walkthrough.
+See:
+- `docs/BAND_ROOM.md`
+- `docs/AGENT_HANDOFF.md`
+- `docs/SUBMISSION_CHECKLIST.md`
+- `docs/FAILURE_POLICY.md`
+- `docs/CONTAINER.md`
+
+## Evidence
+
+Do not treat templates as live evidence. Verification reports become evidence only after a real run records commands, implementation revision, observed output, and pass/fail status.
