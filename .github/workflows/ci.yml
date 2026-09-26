@@ -34,6 +34,7 @@ jobs:
       - run: pytest -q
         env:
           DATABASE_URL: postgresql://kiln:kiln@localhost:5432/kiln
+          PYTHONPATH: ${{ github.workspace }}/app/backend
 
   frontend:
     runs-on: ubuntu-latest
