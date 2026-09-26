@@ -84,11 +84,28 @@ def allowed(run: dict, stage_name: str) -> bool:
     return False
 
 
+def validate_artifact(stage_name: str, artifact: str, status: str) -> None:
+    artifact_path = ROOT / artifact
+    if not artifact_path.is_file():
+        raise SystemExit(f"artifact not found: {artifact}")
+
+    if stage_name == "verifier" and status == "passed":
+        try:
+            document = json.loads(artifact_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise SystemExit(f"verifier artifact must be valid JSON: {artifact}") from exc
+        if document.get("status") != "passed":
+            raise SystemExit("verifier artifact must declare status=passed")
+        summary = document.get("summary", {})
+        if summary.get("failures") != 0:
+            raise SystemExit("verifier artifact cannot prove a run with failures")
+
 def record(run: dict, stage_name: str, status: str, artifact: str) -> None:
     if status not in VALID_STATUSES - {"pending"}:
         raise SystemExit(f"invalid completion status: {status}")
     if not allowed(run, stage_name):
         raise SystemExit(f"stage {stage_name} is not currently allowed")
+    validate_artifact(stage_name, artifact, status)
     item = stage(run, stage_name)
     item["status"] = status
     item["artifact"] = artifact
