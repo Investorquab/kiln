@@ -1,0 +1,29 @@
+{
+  "stage": "builder",
+  "status": "passed",
+  "source": "local factory rehearsal",
+  "work_order": "WO-TABLEKEEPER-001",
+  "inputs": [
+    "factory/artifacts/architect-plan.json",
+    "factory/artifacts/invariant-model.json"
+  ],
+  "implementation": [
+    "FastAPI reservation API",
+    "PostgreSQL persistence",
+    "resource-scoped advisory lock",
+    "idempotency-key uniqueness constraint",
+    "UTC timestamp canonicalization",
+    "transactional overlap and insert path"
+  ],
+  "tests": [
+    "backend pytest integration suite",
+    "factory artifact validation"
+  ],
+  "evidence": [
+    "8 backend integration tests passed locally",
+    "artifact validator passed locally"
+  ],
+  "handoff": "Adversary executes attacks derived from INV-001 through INV-004.",
+  "open_failures": [],
+  "note": "This artifact documents the current local implementation and is not evidence of a BAND Desktop-generated build stage."
+}
