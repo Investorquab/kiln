@@ -73,6 +73,14 @@ This creates a run ledger, records the Architect/Modeler/Builder stages, execute
 and records Adversary and Verifier evidence. A failing attack stops the rehearsal before Verifier and leaves the
 run in the Repairer path. The rehearsal is local evidence and is not a claim of a BAND Desktop run.
 
+
+Run-ledger provenance can also be checked directly:
+
+    python factory/runtime/validate_run_ledger.py <factory-run-id>
+
+A passing result confirms that the concrete ledger, stage artifacts, evidence events, and verifier evidence
+are internally consistent. It does not claim that BAND Desktop generated the run.
+
 The repository can generate a machine-readable local verification record at
 `factory/runs/tablekeeper-local-verification.json`. The runner executes the four attacks, captures their
 structured results, and writes the evidence file. This is explicitly local evidence, not a claim that
