@@ -12,7 +12,7 @@ DATABASE_URL = os.environ.get(
     "postgresql://kiln:kiln@localhost:5432/kiln",
 )
 
-app = FastAPI(title="Kiln Tablekeeper Demo", version="0.2.0")
+app = FastAPI(title="Kiln Tablekeeper Demo", version="0.3.0")
 
 
 class ReservationRequest(BaseModel):
@@ -80,13 +80,33 @@ def row_to_reservation(row) -> Reservation:
     )
 
 
-@app.post("/reservations", response_model=Reservation, status_code=status.HTTP_201_CREATED)
+@app.get("/reservations", response_model=list[Reservation])
+def list_reservations() -> list[Reservation]:
+    with connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, resource_id, start_at, end_at, guest_name, idempotency_key
+            FROM reservations
+            ORDER BY start_at, id
+            """
+        ).fetchall()
+    return [row_to_reservation(row) for row in rows]
+
+
+@app.post(
+    "/reservations",
+    response_model=Reservation,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_reservation(
     request: ReservationRequest,
     idempotency_key: str = Header(min_length=1, alias="Idempotency-Key"),
 ) -> Reservation:
-    start = canonical_utc(request.start_at)
-    end = canonical_utc(request.end_at)
+    try:
+        start = canonical_utc(request.start_at)
+        end = canonical_utc(request.end_at)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     if end <= start:
         raise HTTPException(status_code=422, detail="end_at must be after start_at")
@@ -96,8 +116,8 @@ def create_reservation(
     try:
         with connection() as conn:
             with conn.transaction():
-                # Serialize reservations for the same resource. This makes the
-                # overlap check and insert one atomic critical section.
+                # Serialize reservations for the same resource. The overlap
+                # check and insert therefore share one atomic critical section.
                 conn.execute(
                     "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
                     (request.resource_id,),
@@ -113,7 +133,18 @@ def create_reservation(
                 ).fetchone()
 
                 if existing:
-                    return row_to_reservation(existing)
+                    previous = row_to_reservation(existing)
+                    if (
+                        previous.resource_id != request.resource_id
+                        or previous.start_at != start
+                        or previous.end_at != end
+                        or previous.guest_name != request.guest_name
+                    ):
+                        raise HTTPException(
+                            status_code=409,
+                            detail="idempotency key was already used for a different request",
+                        )
+                    return previous
 
                 conflict = conn.execute(
                     """
