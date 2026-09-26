@@ -1,19 +1,19 @@
 # Clean Container Contract
 
-Kiln is designed to start from a clean container with no dependency on the host application state.
+Kiln is designed to be demonstrable from a clean container.
 
 ## Services
+
 - PostgreSQL 16
 - FastAPI backend
-- Next.js demonstration frontend
+- Next.js frontend
 
-## Published local ports
-- 5432 — PostgreSQL
-- 8000 — backend
-- 3000 — frontend
+## Runtime
 
-## Resource notes
-The hackathon environment must publish the actual CPU, memory, and concurrency limits used for the final run. Do not claim limits that have not been measured or configured.
+Application services communicate over the local Docker network. Runtime services should not require outbound internet access after images are built. Dependency installation happens during image build, not application startup.
 
-## Network boundary
-The application itself should not require outbound network access for the clean-room workload. Dependencies are installed during image build; the runtime path is local to the compose network.
+PostgreSQL is an internal service; FastAPI uses port 8000 and Next.js uses port 3000.
+
+The final submission must publish the actual CPU, memory, and concurrency limits used for the recorded run. Do not treat local development capacity as a claimed benchmark.
+
+The clean-container demonstration should show images build, services start, the health endpoint responds, verification attacks run, and the same verification command can be repeated without previous run state.
