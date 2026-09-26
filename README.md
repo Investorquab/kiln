@@ -35,12 +35,20 @@ With the stack running, install the verification runner dependency:
 
 ```powershell
 python -m pip install -r verification/requirements.txt
+python factory/runtime/validate.py
 python verification/run_all.py
 ```
 
 Each verification run receives a unique run ID, so repeated runs do not collide with evidence from earlier runs.
 
-The runner fails closed: any unexpected response or failed attack produces a non-zero exit code.
+## CI
+
+Every push and pull request checks:
+- backend tests against PostgreSQL 16
+- frontend production build
+- factory artifact validation
+
+CI is a development gate; it is not a substitute for the recorded adversarial run required for the hackathon.
 
 ## Factory
 
@@ -52,6 +60,7 @@ See:
 - `docs/SUBMISSION_CHECKLIST.md`
 - `docs/FAILURE_POLICY.md`
 - `docs/CONTAINER.md`
+- `docs/VERIFICATION.md`
 
 ## Evidence
 
