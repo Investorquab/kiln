@@ -77,6 +77,29 @@ def main() -> int:
         )
     )
 
+    local_report = load("factory/runs/tablekeeper-local-verification.json")
+    errors.extend(
+        check_keys(
+            "local verification report",
+            local_report,
+            ("run_id", "work_order", "stage", "status", "attacks", "summary"),
+        )
+    )
+    if local_report.get("stage") != "verifier":
+        errors.append("local verification report: stage must be verifier")
+    if not isinstance(local_report.get("attacks"), list) or len(local_report["attacks"]) != 4:
+        errors.append("local verification report: expected four attack results")
+    summary = local_report.get("summary", {})
+    errors.extend(
+        check_keys(
+            "local verification summary",
+            summary,
+            ("attacks", "failures", "result"),
+        )
+    )
+    if summary.get("failures") != 0 or summary.get("result") != "VERIFICATION BATCH PASSED":
+        errors.append("local verification report: recorded result is not a passing batch")
+
     run = load("factory/artifacts/run-template.json")
     errors.extend(
         check_keys(
@@ -106,6 +129,7 @@ def main() -> int:
     print("work_order=valid")
     print("handoff=valid")
     print("verification=valid")
+    print("local_verification=valid")
     print("run_template=valid")
     return 0
 
