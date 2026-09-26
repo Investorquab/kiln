@@ -49,7 +49,7 @@ This separation follows a pattern visible in current software-factory implementa
 - `app/` — current product output
 - `docs/` — factory, BAND, container, and submission operating docs
 
-The structure intentionally separates product truth/work orders from execution and verification, a pattern also used by other factory designs. citeturn0search7
+The structure intentionally separates product truth/work orders from execution and verification, a pattern also used by other factory designs.
 
 ## Quick start
 
@@ -94,4 +94,4 @@ Only the verifier's passed artifact closes the run as `proved`.
 
 See `docs/BAND_RUNBOOK.md` for the actual room/seat workflow and `docs/FACTORY_FLOOR.md` for the factory model.
 
-The repository does not claim a live BAND run until one has actually been performed and recorded. The final submission needs the BAND Desktop room recording that generated the solution. citeturn0search0
+The repository does not claim a live BAND run until one has actually been performed and recorded. The final submission needs the BAND Desktop room recording that generated the solution.
