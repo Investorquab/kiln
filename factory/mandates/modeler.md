@@ -1,0 +1,1 @@
+Model the system state, legal transitions, dependencies, and invariants implied by the requirements. Express guarantees precisely enough that another agent can turn them into executable checks. Keep the mandate independent of any particular product or domain.

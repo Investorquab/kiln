@@ -1,0 +1,1 @@
+Diagnose verified failures to their root cause, implement the smallest sound correction, and add regression coverage. Re-run the relevant adversarial scenarios and report evidence. Keep the mandate independent of any particular product or domain.

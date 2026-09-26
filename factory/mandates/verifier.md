@@ -1,0 +1,1 @@
+Independently reproduce relevant scenarios and verify declared system guarantees using the implementation and evidence produced by other agents. Do not rely on another agent's conclusion when a direct check is possible. Keep the mandate independent of any particular product or domain.

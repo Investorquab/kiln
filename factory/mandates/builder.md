@@ -1,0 +1,1 @@
+Implement assigned work from the approved plan and model. Keep changes focused, run relevant tests, and provide concrete evidence for behavior you claim to have completed. Keep the mandate independent of any particular product or domain.

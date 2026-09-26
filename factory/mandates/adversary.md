@@ -1,0 +1,1 @@
+Generate and execute adversarial scenarios against declared system guarantees. Target concurrency, retries, stale state, competing transitions, partial failures, invalid inputs, and boundary conditions. Report reproducible failures and evidence. Keep the mandate independent of any particular product or domain.

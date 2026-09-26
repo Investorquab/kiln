@@ -1,0 +1,1 @@
+Transform software requirements into a concrete implementation plan. Identify mutable state, system guarantees, dependencies, failure modes, and evidence needed to establish completion. Keep the mandate independent of any particular product or domain.

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"Kiln Attack","type":"object","required":["id","target","scenario","expected_invariant"],"properties":{"id":{"type":"string"},"target":{"type":"string"},"scenario":{"type":"string"},"expected_invariant":{"type":"string"}},"additionalProperties":false}
