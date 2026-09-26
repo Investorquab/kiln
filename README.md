@@ -65,6 +65,14 @@ Verification:
     python factory/runtime/validate.py
     python factory/runtime/execute_local_verification.py
 
+To rehearse the complete deterministic factory ledger against the local workload:
+
+    python factory/runtime/rehearse_local_run.py
+
+This creates a run ledger, records the Architect/Modeler/Builder stages, executes the real local attack suite,
+and records Adversary and Verifier evidence. A failing attack stops the rehearsal before Verifier and leaves the
+run in the Repairer path. The rehearsal is local evidence and is not a claim of a BAND Desktop run.
+
 The repository can generate a machine-readable local verification record at
 `factory/runs/tablekeeper-local-verification.json`. The runner executes the four attacks, captures their
 structured results, and writes the evidence file. This is explicitly local evidence, not a claim that
