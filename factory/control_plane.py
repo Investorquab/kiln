@@ -104,6 +104,12 @@ def record(run: dict, stage_name: str, status: str, artifact: str) -> None:
     run["evidence"].append(event)
     run["updated_at"] = event["at"]
 
+    # A new adversary failure opens a fresh repair attempt while preserving prior evidence.
+    if stage_name == "adversary" and status == "failed":
+        repairer = stage(run, "repairer")
+        repairer["status"] = "pending"
+        repairer["artifact"] = None
+
     if stage_name == "verifier" and status == "passed":
         run["status"] = "proved"
     elif status == "failed":
