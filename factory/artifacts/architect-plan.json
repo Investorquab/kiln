@@ -1,0 +1,28 @@
+{
+  "stage": "architect",
+  "status": "passed",
+  "source": "local factory rehearsal",
+  "work_order": "WO-TABLEKEEPER-001",
+  "requirement": "Build a clean-room reservation service that prevents double-booking, safely handles retries, and treats equivalent timestamps consistently.",
+  "mutable_state": [
+    "reservation records",
+    "resource occupancy",
+    "idempotency keys"
+  ],
+  "implementation_plan": [
+    "Define reservation API and reject invalid intervals.",
+    "Canonicalize timestamps to UTC before persistence and comparison.",
+    "Serialize conflicting operations with a resource-scoped database lock.",
+    "Protect idempotency keys with a database-enforced uniqueness constraint and transaction.",
+    "Exercise concurrency, replay, timezone-equivalence, and invalid-input attacks.",
+    "Produce machine-readable evidence for independent verification."
+  ],
+  "critical_guarantees": [
+    "Overlapping committed reservations for one resource cannot both succeed.",
+    "A repeated idempotency key cannot create a second reservation.",
+    "Equivalent timezone representations describe the same interval.",
+    "Rejected operations leave no committed reservation."
+  ],
+  "handoff": "Modeler derives executable invariants from this plan.",
+  "note": "This artifact documents a local rehearsal and is not evidence of a BAND Desktop-generated stage."
+}
