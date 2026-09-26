@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "factory" / "runs"
 STAGES = ["architect", "modeler", "builder", "adversary", "repairer", "verifier"]
 VALID_STATUSES = {"pending", "passed", "failed"}
+RUN_STATUSES = {"running", "repair_required", "proved"}
 
 
 def now() -> str:
@@ -29,12 +30,66 @@ def load(run_id: str) -> dict:
     p = path(run_id)
     if not p.exists():
         raise SystemExit(f"run not found: {run_id}")
-    return json.loads(p.read_text(encoding="utf-8"))
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"invalid run ledger: {run_id}") from exc
 
 
 def save(run: dict) -> None:
     RUNS.mkdir(parents=True, exist_ok=True)
     path(run["run_id"]).write_text(json.dumps(run, indent=2) + "\n", encoding="utf-8")
+
+
+def validate_run(run: dict) -> None:
+    required = (
+        "run_id",
+        "work_order",
+        "requirement",
+        "created_at",
+        "updated_at",
+        "status",
+        "stages",
+        "evidence",
+    )
+    missing = [key for key in required if key not in run]
+    if missing:
+        raise SystemExit(f"run ledger missing keys: {', '.join(missing)}")
+    if run["status"] not in RUN_STATUSES:
+        raise SystemExit(f"invalid run status: {run['status']}")
+
+    stages = run["stages"]
+    if not isinstance(stages, list) or [item.get("name") for item in stages] != STAGES:
+        raise SystemExit("run ledger stages must be exactly architect/modeler/builder/adversary/repairer/verifier")
+
+    for item in stages:
+        if set(item) != {"name", "status", "artifact", "attempt"}:
+            raise SystemExit(f"invalid stage shape: {item.get('name')}")
+        if item["status"] not in VALID_STATUSES:
+            raise SystemExit(f"invalid stage status: {item['name']}")
+        if not isinstance(item["attempt"], int) or item["attempt"] < 0:
+            raise SystemExit(f"invalid stage attempt: {item['name']}")
+        if item["status"] == "pending" and item["attempt"] != 0:
+            raise SystemExit(f"pending stage has non-zero attempt: {item['name']}")
+        if item["status"] != "pending" and not item["artifact"]:
+            raise SystemExit(f"completed stage has no artifact: {item['name']}")
+
+    if not isinstance(run["evidence"], list):
+        raise SystemExit("run ledger evidence must be a list")
+    previous_attempts = {stage: 0 for stage in STAGES}
+    for event in run["evidence"]:
+        required_event = {"event_id", "at", "stage", "status", "artifact", "attempt"}
+        if set(event) != required_event:
+            raise SystemExit("invalid evidence event shape")
+        if event["stage"] not in STAGES or event["status"] not in {"passed", "failed"}:
+            raise SystemExit("invalid evidence event stage/status")
+        if not isinstance(event["attempt"], int) or event["attempt"] < 1:
+            raise SystemExit("invalid evidence attempt")
+        previous_attempts[event["stage"]] = max(previous_attempts[event["stage"]], event["attempt"])
+
+    for item in stages:
+        if previous_attempts[item["name"]] > item["attempt"]:
+            raise SystemExit(f"evidence attempt exceeds stage attempt: {item['name']}")
 
 
 def init_run(requirement: str, work_order: str = "unspecified") -> dict:
@@ -100,16 +155,20 @@ def validate_artifact(stage_name: str, artifact: str, status: str) -> None:
         if summary.get("failures") != 0:
             raise SystemExit("verifier artifact cannot prove a run with failures")
 
+
 def record(run: dict, stage_name: str, status: str, artifact: str) -> None:
+    validate_run(run)
     if status not in VALID_STATUSES - {"pending"}:
         raise SystemExit(f"invalid completion status: {status}")
     if not allowed(run, stage_name):
         raise SystemExit(f"stage {stage_name} is not currently allowed")
     validate_artifact(stage_name, artifact, status)
+
     item = stage(run, stage_name)
     item["status"] = status
     item["artifact"] = artifact
     item["attempt"] += 1
+
     event = {
         "event_id": uuid.uuid4().hex[:10],
         "at": now(),
@@ -121,7 +180,6 @@ def record(run: dict, stage_name: str, status: str, artifact: str) -> None:
     run["evidence"].append(event)
     run["updated_at"] = event["at"]
 
-    # A new adversary failure opens a fresh repair attempt while preserving prior evidence.
     if stage_name == "adversary" and status == "failed":
         repairer = stage(run, "repairer")
         repairer["status"] = "pending"
@@ -133,10 +191,13 @@ def record(run: dict, stage_name: str, status: str, artifact: str) -> None:
         run["status"] = "repair_required"
     else:
         run["status"] = "running"
+
+    validate_run(run)
     save(run)
 
 
 def show(run: dict) -> None:
+    validate_run(run)
     print(f"run_id={run['run_id']}")
     print(f"work_order={run['work_order']}")
     print(f"status={run['status']}")
