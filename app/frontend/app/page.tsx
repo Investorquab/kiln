@@ -14,6 +14,15 @@ const attacks = [
   ["Boundary", "Naive timestamps", "Invalid state"],
 ];
 
+const seats = [
+  ["Architect", "Plan"],
+  ["Modeler", "Specify"],
+  ["Builder", "Build"],
+  ["Adversary", "Attack"],
+  ["Repairer", "Repair"],
+  ["Verifier", "Verify"],
+];
+
 export default function Home() {
   return (
     <main className="shell">
@@ -44,6 +53,21 @@ export default function Home() {
             <span className="number">{number}</span>
             <h3>{title}</h3>
             <p>{description}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="section-head attack-head">
+        <div className="eyebrow">AGENT BAND</div>
+        <h2>Specialists hand off evidence, not assumptions.</h2>
+      </section>
+
+      <section className="seats" aria-label="Generic agent seats">
+        {seats.map(([name, role], index) => (
+          <article className="seat" key={name}>
+            <span className="number">0{index + 1}</span>
+            <strong>{name}</strong>
+            <span>{role}</span>
           </article>
         ))}
       </section>
