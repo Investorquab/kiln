@@ -1,0 +1,35 @@
+{
+  "stage": "modeler",
+  "status": "passed",
+  "source": "local factory rehearsal",
+  "work_order": "WO-TABLEKEEPER-001",
+  "input": "factory/artifacts/architect-plan.json",
+  "invariants": [
+    {
+      "id": "INV-001",
+      "statement": "Two committed reservations for the same resource must not overlap.",
+      "severity": "critical",
+      "executable_check": "concurrent conflicting requests"
+    },
+    {
+      "id": "INV-002",
+      "statement": "Retrying an operation with the same idempotency key must not create a second reservation.",
+      "severity": "critical",
+      "executable_check": "same key replay"
+    },
+    {
+      "id": "INV-003",
+      "statement": "Equivalent timezone representations of the same instant must be treated as the same interval.",
+      "severity": "high",
+      "executable_check": "UTC and offset representations"
+    },
+    {
+      "id": "INV-004",
+      "statement": "A failed reservation attempt must not leave a partial committed reservation.",
+      "severity": "critical",
+      "executable_check": "invalid input and transaction rollback"
+    }
+  ],
+  "handoff": "Builder implements the approved model; Adversary targets every critical guarantee.",
+  "note": "This artifact documents a local rehearsal and is not evidence of a BAND Desktop-generated stage."
+}
