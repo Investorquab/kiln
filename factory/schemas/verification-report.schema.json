@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kiln Verification Report",
+  "type": "object",
+  "required": ["run_id", "work_order", "stage", "status", "attacks", "summary"],
+  "properties": {
+    "run_id": {"type": "string", "minLength": 1},
+    "work_order": {"type": "string", "minLength": 1},
+    "stage": {"const": "verifier"},
+    "status": {"enum": ["passed", "failed", "not-run"]},
+    "attacks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "status"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed"]},
+          "requests": {"type": "integer", "minimum": 0},
+          "created": {"type": "integer", "minimum": 0},
+          "conflicts": {"type": "integer", "minimum": 0},
+          "unexpected": {"type": "integer", "minimum": 0},
+          "replay_statuses": {"type": "array", "items": {"type": "integer"}},
+          "unique_reservation_ids": {"type": "integer", "minimum": 0},
+          "tampered_replay_status": {"type": "integer"},
+          "first": {"type": "integer"},
+          "equivalent": {"type": "integer"},
+          "status_code": {"type": "integer"},
+          "created_records": {"type": "integer", "minimum": 0},
+          "evidence": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["attacks", "failures", "result"],
+      "properties": {
+        "attacks": {"type": "integer", "minimum": 0},
+        "failures": {"type": "integer", "minimum": 0},
+        "result": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "source": {"type": "string"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
