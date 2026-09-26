@@ -8,6 +8,7 @@ ATTACKS = [
     "verification/attacks/concurrency.py",
     "verification/attacks/idempotency.py",
     "verification/attacks/timezone.py",
+    "verification/attacks/invalid_input.py",
 ]
 
 
