@@ -84,6 +84,14 @@ def main() -> int:
 
     print(f"verification_run_id={verification['run_id']}")
     print(f"status={run['status']}")
+
+    ledger_check = subprocess.run(
+        [sys.executable, "factory/runtime/validate_run_ledger.py", run_id],
+        cwd=ROOT,
+        check=False,
+    )
+    if ledger_check.returncode != 0:
+        raise SystemExit("factory run ledger failed provenance validation")
     print(f"ledger=factory/runs/{run_id}.json")
     print("FACTORY REHEARSAL PASSED")
     return 0
