@@ -1,11 +1,18 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
+import os
+import psycopg
 from fastapi import FastAPI, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
 
-app = FastAPI(title="Kiln Tablekeeper Demo", version="0.1.0")
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://kiln:kiln@localhost:5432/kiln",
+)
+
+app = FastAPI(title="Kiln Tablekeeper Demo", version="0.2.0")
 
 
 class ReservationRequest(BaseModel):
@@ -24,19 +31,53 @@ class Reservation(BaseModel):
     idempotency_key: str
 
 
-_store: dict[str, Reservation] = {}
-_idempotency: dict[str, Reservation] = {}
-
-
 def canonical_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
         raise ValueError("timestamps must include a timezone")
     return value.astimezone(timezone.utc)
 
 
+def connection():
+    return psycopg.connect(DATABASE_URL)
+
+
+def ensure_schema() -> None:
+    with connection() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reservations (
+                id uuid PRIMARY KEY,
+                resource_id text NOT NULL,
+                start_at timestamptz NOT NULL,
+                end_at timestamptz NOT NULL,
+                guest_name text NOT NULL,
+                idempotency_key text NOT NULL UNIQUE,
+                CHECK (end_at > start_at)
+            )
+            """
+        )
+        conn.commit()
+
+
+@app.on_event("startup")
+def startup() -> None:
+    ensure_schema()
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+def row_to_reservation(row) -> Reservation:
+    return Reservation(
+        id=row[0],
+        resource_id=row[1],
+        start_at=row[2],
+        end_at=row[3],
+        guest_name=row[4],
+        idempotency_key=row[5],
+    )
 
 
 @app.post("/reservations", response_model=Reservation, status_code=status.HTTP_201_CREATED)
@@ -50,25 +91,65 @@ def create_reservation(
     if end <= start:
         raise HTTPException(status_code=422, detail="end_at must be after start_at")
 
-    previous = _idempotency.get(idempotency_key)
-    if previous:
-        return previous
+    reservation_id = uuid4()
 
-    for existing in _store.values():
-        if existing.resource_id != request.resource_id:
-            continue
-        overlaps = start < existing.end_at and existing.start_at < end
-        if overlaps:
-            raise HTTPException(status_code=409, detail="resource is already reserved")
+    try:
+        with connection() as conn:
+            with conn.transaction():
+                # Serialize reservations for the same resource. This makes the
+                # overlap check and insert one atomic critical section.
+                conn.execute(
+                    "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                    (request.resource_id,),
+                )
 
-    reservation = Reservation(
-        id=uuid4(),
-        resource_id=request.resource_id,
-        start_at=start,
-        end_at=end,
-        guest_name=request.guest_name,
-        idempotency_key=idempotency_key,
-    )
-    _store[str(reservation.id)] = reservation
-    _idempotency[idempotency_key] = reservation
-    return reservation
+                existing = conn.execute(
+                    """
+                    SELECT id, resource_id, start_at, end_at, guest_name, idempotency_key
+                    FROM reservations
+                    WHERE idempotency_key = %s
+                    """,
+                    (idempotency_key,),
+                ).fetchone()
+
+                if existing:
+                    return row_to_reservation(existing)
+
+                conflict = conn.execute(
+                    """
+                    SELECT 1
+                    FROM reservations
+                    WHERE resource_id = %s
+                      AND start_at < %s
+                      AND %s < end_at
+                    LIMIT 1
+                    """,
+                    (request.resource_id, end, start),
+                ).fetchone()
+
+                if conflict:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="resource is already reserved",
+                    )
+
+                row = conn.execute(
+                    """
+                    INSERT INTO reservations
+                        (id, resource_id, start_at, end_at, guest_name, idempotency_key)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id, resource_id, start_at, end_at, guest_name, idempotency_key
+                    """,
+                    (
+                        reservation_id,
+                        request.resource_id,
+                        start,
+                        end,
+                        request.guest_name,
+                        idempotency_key,
+                    ),
+                ).fetchone()
+
+                return row_to_reservation(row)
+    except HTTPException:
+        raise

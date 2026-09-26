@@ -1,16 +1,25 @@
+import os
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app, _idempotency, _store
+from app.main import app, connection, ensure_schema
 
+
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("DATABASE_URL"),
+    reason="DATABASE_URL is required for integration tests",
+)
 
 client = TestClient(app)
 
 
 def setup_function() -> None:
-    _store.clear()
-    _idempotency.clear()
+    ensure_schema()
+    with connection() as conn:
+        conn.execute("TRUNCATE reservations")
+        conn.commit()
 
 
 def payload():
@@ -28,15 +37,25 @@ def test_health():
 
 def test_overlapping_reservation_is_rejected():
     first = client.post("/reservations", json=payload(), headers={"Idempotency-Key": "a"})
-    second = client.post("/reservations", json={**payload(), "guest_name": "Second"}, headers={"Idempotency-Key": "b"})
+    second = client.post(
+        "/reservations",
+        json={**payload(), "guest_name": "Second"},
+        headers={"Idempotency-Key": "b"},
+    )
 
     assert first.status_code == 201
     assert second.status_code == 409
 
 
 def test_retry_with_same_idempotency_key_returns_same_reservation():
-    first = client.post("/reservations", json=payload(), headers={"Idempotency-Key": "retry-1"})
-    retry = client.post("/reservations", json={**payload(), "guest_name": "Changed"}, headers={"Idempotency-Key": "retry-1"})
+    first = client.post(
+        "/reservations", json=payload(), headers={"Idempotency-Key": "retry-1"}
+    )
+    retry = client.post(
+        "/reservations",
+        json={**payload(), "guest_name": "Changed"},
+        headers={"Idempotency-Key": "retry-1"},
+    )
 
     assert first.status_code == 201
     assert retry.status_code == 201
@@ -44,13 +63,19 @@ def test_retry_with_same_idempotency_key_returns_same_reservation():
 
 
 def test_timezone_equivalent_windows_conflict():
-    first = client.post("/reservations", json=payload(), headers={"Idempotency-Key": "tz-a"})
+    first = client.post(
+        "/reservations", json=payload(), headers={"Idempotency-Key": "tz-a"}
+    )
     equivalent = {
         **payload(),
         "start_at": "2026-09-26T17:30:00Z",
         "end_at": "2026-09-26T18:30:00Z",
     }
-    second = client.post("/reservations", json=equivalent, headers={"Idempotency-Key": "tz-b"})
+    second = client.post(
+        "/reservations",
+        json=equivalent,
+        headers={"Idempotency-Key": "tz-b"},
+    )
 
     assert first.status_code == 201
     assert second.status_code == 409
