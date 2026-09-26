@@ -4,6 +4,7 @@
   "inputs": ["factory/artifacts/tablekeeper-plan.md"],
   "outputs": ["factory/schemas/invariants.tablekeeper.json"],
   "changed_files": ["factory/schemas/invariants.tablekeeper.json"],
+  "tests": ["schema validation"],
   "checks": ["schema validation"],
   "evidence": ["INV-001 through INV-004 are declared"],
   "open_failures": [],
