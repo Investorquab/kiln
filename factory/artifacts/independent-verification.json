@@ -1,0 +1,21 @@
+{
+  "stage": "verifier",
+  "status": "passed",
+  "source": "local executable verification rehearsal",
+  "work_order": "WO-TABLEKEEPER-001",
+  "independence": "Verifier evidence is produced by a separate executable verification runner rather than inferred from the Builder report.",
+  "verification_run": "c324a5c7ea90",
+  "checks": [
+    "concurrency",
+    "idempotency",
+    "timezone",
+    "invalid_input"
+  ],
+  "summary": {
+    "attacks": 4,
+    "failures": 0,
+    "result": "VERIFICATION BATCH PASSED"
+  },
+  "conclusion": "The current local Tablekeeper implementation passed the declared executable checks.",
+  "note": "This artifact is local rehearsal evidence and is not evidence of a BAND Desktop-generated verifier stage."
+}
