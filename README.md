@@ -2,66 +2,39 @@
 
 **Kiln is an autonomous software factory that builds software, attacks its own implementation, repairs failures, and independently verifies the result.**
 
-> **Build it. Break it. Prove it.**
+> Build it. Break it. Prove it.
 
-## Core loop
+## What Kiln actually is
 
-**Requirement → Model → Build → Attack → Repair → Verify → Evidence**
+Kiln is the **factory**, not the Tablekeeper reservation product. The hackathon workload is supplied to the factory as a work order. Kiln turns that requirement into a plan, model, implementation, adversarial test run, repair cycle, and independent verification.
 
-## Demonstration workload
+For the current demonstration, the workload is a clean-room Tablekeeper-style reservation service.
 
-Kiln uses a clean-room Tablekeeper-style reservation service to demonstrate:
-- concurrency safety
-- idempotent retries
-- timezone normalization
-- invalid-input rejection
+## Factory loop
 
-The workload is the demonstration. **The factory is the product.**
+Requirement -> Model -> Build -> Attack -> Repair -> Verify -> Evidence
+
+BAND Desktop provides the multi-agent collaboration surface. Kiln defines the generic mandates, workload contracts, handoff rules, deterministic run state, verification harness, and evidence protocol.
+
+See `docs/FACTORY_ARCHITECTURE.md`.
 
 ## Quick start
 
-```powershell
-git clone https://github.com/Investorquab/kiln.git
-cd kiln
-docker compose up --build
-```
+    git clone https://github.com/Investorquab/kiln.git
+    cd kiln
+    docker compose up --build
 
-Open:
-- http://localhost:3000 — Kiln interface
-- http://localhost:8000/docs — backend API
-- http://localhost:8000/health — health check
+Open http://localhost:3000 for the Kiln interface, http://localhost:8000/docs for the API, and http://localhost:8000/health for health.
 
-With the stack running, install the verification runner dependency:
+Verification:
 
-```powershell
-python -m pip install -r verification/requirements.txt
-python factory/runtime/validate.py
-python verification/run_all.py
-```
+    python -m pip install -r verification/requirements.txt
+    python factory/runtime/validate.py
+    python verification/run_all.py
 
-Each verification run receives a unique run ID, so repeated runs do not collide with evidence from earlier runs.
+Factory control-plane example:
 
-## CI
+    python factory/control_plane.py init "Build the Tablekeeper workload"
+    python factory/control_plane.py status <run-id>
 
-Every push and pull request checks:
-- backend tests against PostgreSQL 16
-- frontend production build
-- factory artifact validation
-
-CI is a development gate; it is not a substitute for the recorded adversarial run required for the hackathon.
-
-## Factory
-
-The BAND Desktop room uses generic mandates for Architect, Modeler, Builder, Adversary, Repairer, and Verifier. Workload-specific context is passed as task artifacts rather than encoded into the mandates.
-
-See:
-- `docs/BAND_ROOM.md`
-- `docs/AGENT_HANDOFF.md`
-- `docs/SUBMISSION_CHECKLIST.md`
-- `docs/FAILURE_POLICY.md`
-- `docs/CONTAINER.md`
-- `docs/VERIFICATION.md`
-
-## Evidence
-
-Do not treat templates as live evidence. Verification reports become evidence only after a real run records commands, implementation revision, observed output, and pass/fail status.
+The final demonstration must show the BAND Desktop room that generated the solution. The repository does not pretend a live BAND run has happened until we actually perform and record one.
