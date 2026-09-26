@@ -100,3 +100,19 @@ def test_concurrent_same_slot_has_single_winner():
 
     assert statuses.count(201) == 1
     assert statuses.count(409) == 19
+
+
+def test_same_idempotency_key_across_resources_is_rejected(client):
+    first = {
+        "resource_id": "key-race-a",
+        "start_at": "2026-10-01T18:00:00+01:00",
+        "end_at": "2026-10-01T19:00:00+01:00",
+        "guest_name": "First",
+    }
+    second = {**first, "resource_id": "key-race-b", "guest_name": "Second"}
+
+    r1 = client.post("/reservations", json=first, headers={"Idempotency-Key": "global-key"})
+    r2 = client.post("/reservations", json=second, headers={"Idempotency-Key": "global-key"})
+
+    assert r1.status_code == 201
+    assert r2.status_code == 409

@@ -122,6 +122,14 @@ def create_reservation(
                     "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
                     (request.resource_id,),
                 )
+                # Idempotency keys are globally unique, so serialize their
+                # lookup/creation path as well. This also prevents a same-key
+                # race across different resources from becoming a raw
+                # database unique-constraint error.
+                conn.execute(
+                    "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                    (f"idempotency:{idempotency_key}",),
+                )
 
                 existing = conn.execute(
                     """
