@@ -1,0 +1,12 @@
+{
+  "run_id": "example-not-a-live-result",
+  "stage": "verifier",
+  "status": "not-run",
+  "invariants": [
+    {"id":"INV-001","status":"pending"},
+    {"id":"INV-002","status":"pending"},
+    {"id":"INV-003","status":"pending"},
+    {"id":"INV-004","status":"pending"}
+  ],
+  "note": "This artifact is a template. It is not evidence of a successful local run."
+}
