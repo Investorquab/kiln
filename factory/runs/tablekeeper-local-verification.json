@@ -1,0 +1,44 @@
+{
+  "run_id": "2e712403f726",
+  "work_order": "WO-TABLEKEEPER-001",
+  "workload": "tablekeeper",
+  "stage": "verifier",
+  "status": "passed",
+  "source": "local executable verification",
+  "attacks": [
+    {
+      "name": "concurrency",
+      "status": "passed",
+      "requests": 50,
+      "created": 1,
+      "conflicts": 49,
+      "unexpected": 0,
+      "evidence": "exactly one reservation committed"
+    },
+    {
+      "name": "idempotency",
+      "status": "passed",
+      "replay_statuses": [201, 201, 201],
+      "unique_reservation_ids": 1,
+      "tampered_replay_status": 409
+    },
+    {
+      "name": "timezone",
+      "status": "passed",
+      "first": 201,
+      "equivalent": 409
+    },
+    {
+      "name": "invalid_input",
+      "status": "passed",
+      "status_code": 422,
+      "created_records": 0
+    }
+  ],
+  "summary": {
+    "attacks": 4,
+    "failures": 0,
+    "result": "VERIFICATION BATCH PASSED"
+  },
+  "note": "This is evidence from an actual local run. It is not evidence of a BAND Desktop run."
+}
