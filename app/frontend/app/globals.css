@@ -1,0 +1,19 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { background: #0b0d10; color: #f4f1e8; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 72px 0 96px; }
+.hero { max-width: 760px; padding: 56px 0 72px; }
+.eyebrow { font-size: 11px; letter-spacing: .18em; font-weight: 800; color: #a9b0b9; }
+h1 { font-size: clamp(72px, 12vw, 150px); line-height: .82; margin: 18px 0 24px; letter-spacing: -.08em; }
+.lede { font-size: clamp(25px, 4vw, 42px); line-height: 1.05; margin: 0 0 20px; font-weight: 700; max-width: 680px; }
+.copy { color: #a9b0b9; font-size: 17px; line-height: 1.7; max-width: 650px; }
+.loop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #30343a; border: 1px solid #30343a; }
+.stage { background: #111419; min-height: 190px; padding: 28px; }
+.number { color: #747b84; font: 700 12px/1 monospace; }
+.stage h2 { margin: 40px 0 10px; font-size: 22px; }
+.stage p, .demo p { color: #a9b0b9; line-height: 1.6; margin: 0; }
+.demo { margin-top: 1px; border: 1px solid #30343a; background: #111419; padding: 32px; display: flex; justify-content: space-between; gap: 30px; align-items: end; }
+.demo h2 { margin: 12px 0; font-size: 28px; }
+.status { white-space: nowrap; font-size: 13px; color: #b9c1ca; }
+.status span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #77d69b; margin-right: 8px; }
+@media (max-width: 760px) { .shell { width: min(100% - 28px, 620px); padding-top: 30px; } .loop { grid-template-columns: 1fr; } .demo { flex-direction: column; align-items: start; } }

@@ -26,5 +26,13 @@ services:
     ports:
       - "8000:8000"
 
+  frontend:
+    build:
+      context: ./app/frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
 volumes:
   kiln-postgres:
