@@ -15,36 +15,63 @@ const attacks = [
 ];
 
 const seats = [
-  ["Architect", "Plan"],
-  ["Modeler", "Specify"],
+  ["Architect", "Specify"],
+  ["Modeler", "Model"],
   ["Builder", "Build"],
   ["Adversary", "Attack"],
   ["Repairer", "Repair"],
   ["Verifier", "Verify"],
 ];
 
+const workOrder = [
+  ["ID", "WO-TABLEKEEPER-001"],
+  ["Input", "Clean-room reservation requirement"],
+  ["Output", "Verified product + evidence chain"],
+  ["Authority", "Verifier evidence"],
+];
+
 export default function Home() {
   return (
     <main className="shell">
+      <header className="topbar">
+        <span className="brand">KILN / FACTORY FLOOR</span>
+        <span className="status"><i /> CONTROL PLANE ONLINE</span>
+      </header>
+
       <section className="hero">
-        <div className="eyebrow">AUTONOMOUS SOFTWARE FACTORY / KILN</div>
+        <div className="eyebrow">AUTONOMOUS SOFTWARE FACTORY</div>
         <h1>Build it.<br />Break it.<br />Prove it.</h1>
-        <p className="lede">Software that earns its green check.</p>
+        <p className="lede">The agent is not the factory. The evidence chain is.</p>
         <p className="copy">
-          Kiln turns requirements into working software, attacks its own
-          implementation, repairs reproducible failures, and independently
-          verifies the final result.
+          Kiln turns a replaceable work order into a governed production run:
+          specialists hand off artifacts, adversarial checks expose failures,
+          repair cycles close the loop, and an independent verifier decides
+          whether the result is proved.
         </p>
         <div className="hero-meta">
-          <span>6 generic agent seats</span>
-          <span>4 adversarial scenarios</span>
-          <span>1 evidence chain</span>
+          <span>6 generic seats</span>
+          <span>1 replaceable work order</span>
+          <span>Verifier-owned completion</span>
         </div>
       </section>
 
       <section className="section-head">
+        <div className="eyebrow">ACTIVE WORK ORDER</div>
+        <h2>Tablekeeper / clean-room reservation workload</h2>
+      </section>
+
+      <section className="work-order" aria-label="Active work order">
+        {workOrder.map(([label, value]) => (
+          <div className="work-item" key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </section>
+
+      <section className="section-head">
         <div className="eyebrow">FACTORY LOOP</div>
-        <h2>From requirement to evidence.</h2>
+        <h2>Production is a gated pipeline.</h2>
       </section>
 
       <section className="loop" aria-label="Factory stages">
@@ -58,8 +85,8 @@ export default function Home() {
       </section>
 
       <section className="section-head attack-head">
-        <div className="eyebrow">AGENT BAND</div>
-        <h2>Specialists hand off evidence, not assumptions.</h2>
+        <div className="eyebrow">WORK STATIONS</div>
+        <h2>Generic seats. Replaceable workload.</h2>
       </section>
 
       <section className="seats" aria-label="Generic agent seats">
@@ -73,8 +100,8 @@ export default function Home() {
       </section>
 
       <section className="section-head attack-head">
-        <div className="eyebrow">ADVERSARIAL LAYER</div>
-        <h2>Don't trust the implementation. Try to break it.</h2>
+        <div className="eyebrow">QUALITY CONTROL / ATTACK CELL</div>
+        <h2>Every guarantee gets a way to fail.</h2>
       </section>
 
       <section className="attacks">
@@ -89,13 +116,30 @@ export default function Home() {
         ))}
       </section>
 
+      <section className="factory-status">
+        <div>
+          <div className="eyebrow">RUN LEDGER</div>
+          <h2>Evidence follows the work.</h2>
+          <p>
+            Each run records stage status, attempts, artifacts, and evidence
+            events. A failed attack moves the run into repair; only a passed
+            independent verification can close the factory run as proved.
+          </p>
+        </div>
+        <div className="ledger">
+          <div><span>STATE</span><strong>RUNNING</strong></div>
+          <div><span>ARTIFACTS</span><strong>6 HANDOFF TYPES</strong></div>
+          <div><span>FINAL GATE</span><strong>VERIFIER</strong></div>
+        </div>
+      </section>
+
       <section className="demo">
         <div>
-          <div className="eyebrow">DEMONSTRATION WORKLOAD</div>
+          <div className="eyebrow">PRODUCT OUTPUT</div>
           <h2>Tablekeeper reservation service</h2>
           <p>
-            A clean-room reservation workload used to expose concurrency,
-            idempotency, timezone, and boundary correctness.
+            The workload is the thing Kiln builds. Kiln itself remains
+            workload-agnostic: change the work order, keep the factory.
           </p>
         </div>
         <div className="proof">
