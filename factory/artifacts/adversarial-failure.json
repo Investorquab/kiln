@@ -1,0 +1,132 @@
+{
+  "stage": "adversary",
+  "status": "failed",
+  "source": "independent live-service attack against committed controlled-defect revision",
+  "work_order": "WO-TABLEKEEPER-001",
+  "baseline": {
+    "branch": "integration/20260927-0217",
+    "revision": "b48720fd148abdd6d2eec7940ed5b8fbcabdc42a",
+    "status": "preserved known-good reference"
+  },
+  "defect": {
+    "branch": "failure-repair/tablekeeper-20260927",
+    "revision": "3c152aedb1b513e08cc6674dce6be5a961c5de92",
+    "file": "app/backend/app/main.py",
+    "description": "The existing-key replay comparison omits guest_name, allowing a key bound to one guest payload to be replayed with a different guest_name."
+  },
+  "environment": {
+    "service": "FastAPI at http://127.0.0.1:8000",
+    "database": "PostgreSQL database kiln, isolated schema kiln_failure_repair_20260927",
+    "health_command": "Invoke-RestMethod http://127.0.0.1:8000/health | ConvertTo-Json -Compress",
+    "health_output": "{\"status\":\"ok\"}",
+    "docker": "not used; this reproduction targeted the local PostgreSQL-backed service"
+  },
+  "focused_attack": {
+    "run_id": "adversary-defect-20260927-0518-investigator",
+    "command": "python verification/attacks/idempotency.py",
+    "environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:8000",
+      "KILN_ATTACK_RUN_ID": "adversary-defect-20260927-0518-investigator"
+    },
+    "exit_code": 1,
+    "stdout_lines": [
+      "run_id=adversary-defect-20260927-0518-investigator",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=201",
+      "IDEMPOTENCY ATTACK FAILED"
+    ],
+    "database_observation": {
+      "schema": "kiln_failure_repair_20260927",
+      "idempotency_key": "replay-attack-adversary-defect-20260927-0518-investigator",
+      "matching_rows": 1,
+      "stored_guest_name_after_tampered_replay": "Replay Test"
+    },
+    "expected": "A request reusing the original key with guest_name Tampered Replay must be rejected with HTTP 409.",
+    "observed": "The tampered request was incorrectly accepted with HTTP 201 and returned the existing reservation; the database still contains one row bound to the original guest name."
+  },
+  "full_attack_batch": {
+    "run_id": "adversary-defect-batch-20260927-0520-investigator",
+    "command": "python verification/run_all.py",
+    "environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:8000",
+      "KILN_ATTACK_RUN_ID": "adversary-defect-batch-20260927-0520-investigator"
+    },
+    "exit_code": 1,
+    "stdout_lines": [
+      "run_id=adversary-defect-batch-20260927-0520-investigator",
+      "requests=50",
+      "created=1",
+      "conflicts=49",
+      "unexpected=0",
+      "ATTACK PASSED: exactly one reservation committed",
+      "run_id=adversary-defect-batch-20260927-0520-investigator",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=201",
+      "IDEMPOTENCY ATTACK FAILED",
+      "run_id=adversary-defect-batch-20260927-0520-investigator",
+      "first=201",
+      "equivalent=409",
+      "TIMEZONE ATTACK PASSED",
+      "run_id=adversary-defect-batch-20260927-0520-investigator",
+      "status=422",
+      "created_records=0",
+      "INVALID INPUT ATTACK PASSED",
+      "",
+      "=== verification/attacks/concurrency.py ===",
+      "",
+      "=== verification/attacks/idempotency.py ===",
+      "",
+      "=== verification/attacks/timezone.py ===",
+      "",
+      "=== verification/attacks/invalid_input.py ===",
+      "",
+      "run_id=adversary-defect-batch-20260927-0520-investigator",
+      "attacks=4",
+      "failures=1",
+      "VERIFICATION BATCH FAILED"
+    ],
+    "checks": [
+      {
+        "name": "concurrency",
+        "result": "passed",
+        "requests": 50,
+        "created": 1,
+        "conflicts": 49,
+        "unexpected": 0
+      },
+      {
+        "name": "idempotency",
+        "result": "failed",
+        "replay_statuses": [
+          201,
+          201,
+          201
+        ],
+        "unique_reservation_ids": 1,
+        "tampered_replay_status": 201,
+        "expected_tampered_replay_status": 409
+      },
+      {
+        "name": "timezone",
+        "result": "passed",
+        "first_status": 201,
+        "equivalent_interval_status": 409
+      },
+      {
+        "name": "invalid_input",
+        "result": "passed",
+        "status": 422,
+        "created_records": 0
+      }
+    ],
+    "summary": {
+      "attacks": 4,
+      "failures": 1,
+      "result": "VERIFICATION BATCH FAILED"
+    }
+  },
+  "conclusion": "The Adversary independently reproduced the idempotency key-reuse defect. The other three approved attacks passed in the same batch.",
+  "repair_handoff": "Repairer: restore payload equality checking for guest_name on an existing idempotency key, add regression coverage proving a changed guest_name is rejected without changing reservation state, then rerun the attack batch."
+}
