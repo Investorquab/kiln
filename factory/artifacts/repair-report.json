@@ -1,0 +1,98 @@
+{
+  "stage": "repairer",
+  "status": "passed",
+  "source": "local PostgreSQL-backed repair execution",
+  "work_order": "WO-TABLEKEEPER-001",
+  "baseline": {
+    "branch": "integration/20260927-0217",
+    "revision": "b48720fd148abdd6d2eec7940ed5b8fbcabdc42a",
+    "preserved": true
+  },
+  "failure_input": {
+    "defect_revision": "3c152aedb1b513e08cc6674dce6be5a961c5de92",
+    "adversary_artifact": "factory/artifacts/adversarial-failure.json",
+    "behavior": "A same-key replay changing guest_name incorrectly returned HTTP 201 instead of 409; one row remained, bound to the original guest."
+  },
+  "diagnosis": {
+    "root_cause": "The existing-key replay payload comparison omitted guest_name, so a request with the same resource and interval but a changed guest was accepted as an exact replay.",
+    "repair": "Restored previous.guest_name != request.guest_name to the existing-key mismatch predicate.",
+    "repair_revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+    "changed_files": [
+      "app/backend/app/main.py",
+      "app/backend/tests/test_reservations.py"
+    ]
+  },
+  "regression": {
+    "test": "app/backend/tests/test_reservations.py::test_changed_guest_replay_is_rejected_without_changing_state",
+    "behavior": "Creates the original reservation, attempts a changed-guest replay, lists reservations, asserts exactly the original row remains, then asserts the replay returned 409.",
+    "database": "PostgreSQL 16.15 database kiln, isolated schema kiln_failure_repair_20260927",
+    "command": "python -m pytest app/backend/tests/test_reservations.py::test_changed_guest_replay_is_rejected_without_changing_state -q",
+    "environment": {
+      "DATABASE_URL": "postgresql://kiln:kiln@localhost:5432/kiln",
+      "PGOPTIONS": "-c search_path=kiln_failure_repair_20260927",
+      "PYTHONPATH": "app/backend",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"
+    },
+    "defect_revision_result": {
+      "exit_code": 1,
+      "observed": "FAILED; first.status_code == 201 passed; matching_rows == [first.json()] passed; changed_replay.status_code was 201, expected 409.",
+      "result": "1 failed"
+    },
+    "repaired_revision_result": {
+      "exit_code": 0,
+      "output": [
+        ".",
+        "1 passed, 2 warnings in 2.82s"
+      ]
+    }
+  },
+  "regression_suite": {
+    "command": "python -m pytest app/backend/tests -q",
+    "repair_revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+    "exit_code": 0,
+    "output": [
+      ".........",
+      "9 passed, 2 warnings in 7.54s"
+    ]
+  },
+  "repairer_adversarial_retest": {
+    "command": "python verification/run_all.py",
+    "environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:18081",
+      "KILN_ATTACK_RUN_ID": "repair-postcommit-20260927-testauthor",
+      "service": "FastAPI on 127.0.0.1:18081 with PostgreSQL schema kiln_failure_repair_20260927"
+    },
+    "exit_code": 0,
+    "stdout_lines": [
+      "run_id=repair-postcommit-20260927-testauthor",
+      "requests=50",
+      "created=1",
+      "conflicts=49",
+      "unexpected=0",
+      "ATTACK PASSED: exactly one reservation committed",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=409",
+      "IDEMPOTENCY ATTACK PASSED",
+      "first=201",
+      "equivalent=409",
+      "TIMEZONE ATTACK PASSED",
+      "status=422",
+      "created_records=0",
+      "INVALID INPUT ATTACK PASSED",
+      "attacks=4",
+      "failures=0",
+      "VERIFICATION BATCH PASSED"
+    ],
+    "summary": {
+      "attacks": 4,
+      "failures": 0,
+      "result": "VERIFICATION BATCH PASSED"
+    }
+  },
+  "limitations": [
+    "Checks ran against a local PostgreSQL-backed service; Docker and clean-container behavior were not verified.",
+    "The full four-attack batch in this artifact is the Repairer's retest, not the independent Verifier result.",
+    "Independent Verifier execution is pending."
+  ]
+}
