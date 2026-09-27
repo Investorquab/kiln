@@ -1,21 +1,116 @@
 {
+  "run_id": "verifier-20260927-0204-test-author",
   "stage": "verifier",
   "status": "passed",
-  "source": "local executable verification rehearsal",
+  "source": "independent live-service verification run; not a clean-container or BAND Desktop run",
   "work_order": "WO-TABLEKEEPER-001",
-  "independence": "Verifier evidence is produced by a separate executable verification runner rather than inferred from the Builder report.",
-  "verification_run": "c324a5c7ea90",
+  "independence": "Executed the repository's four attack scripts against the live local service using a fresh run ID, without using the Adversary batches as proof.",
+  "verification_run": "verifier-20260927-0204-test-author",
+  "implementation": {
+    "repository": "https://github.com/Investorquab/kiln",
+    "revision": "0ac6a4b6544df03afd8b0c9f85646f7a38d99673",
+    "preexisting_worktree_change": "factory/artifacts/adversarial-report.json was already modified before this verifier run and was not changed by the verifier."
+  },
+  "environment": {
+    "os": "Windows",
+    "service": "FastAPI at http://127.0.0.1:8000",
+    "health": {
+      "result": "passed",
+      "output": "{\"status\":\"ok\"}"
+    },
+    "docker": {
+      "status": "unavailable",
+      "command": "docker info",
+      "exit_code": 1,
+      "observed_error": "failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified."
+    },
+    "control_plane_run_ledger": {
+      "status": "recorded",
+      "run_id": "ba5777c35f60",
+      "path": "factory/runs/ba5777c35f60.json"
+    }
+  },
+  "command": {
+    "working_directory": "kiln",
+    "executable": "python verification/run_all.py",
+    "environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:8000",
+      "KILN_ATTACK_RUN_ID": "verifier-20260927-0204-test-author"
+    },
+    "exit_code": 0,
+    "stdout_lines": [
+      "run_id=verifier-20260927-0204-test-author",
+      "requests=50",
+      "created=1",
+      "conflicts=49",
+      "unexpected=0",
+      "ATTACK PASSED: exactly one reservation committed",
+      "run_id=verifier-20260927-0204-test-author",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=409",
+      "IDEMPOTENCY ATTACK PASSED",
+      "run_id=verifier-20260927-0204-test-author",
+      "first=201",
+      "equivalent=409",
+      "TIMEZONE ATTACK PASSED",
+      "run_id=verifier-20260927-0204-test-author",
+      "status=422",
+      "created_records=0",
+      "INVALID INPUT ATTACK PASSED",
+      "",
+      "=== verification/attacks/concurrency.py ===",
+      "",
+      "=== verification/attacks/idempotency.py ===",
+      "",
+      "=== verification/attacks/timezone.py ===",
+      "",
+      "=== verification/attacks/invalid_input.py ===",
+      "",
+      "run_id=verifier-20260927-0204-test-author",
+      "attacks=4",
+      "failures=0",
+      "VERIFICATION BATCH PASSED"
+    ]
+  },
   "checks": [
-    "concurrency",
-    "idempotency",
-    "timezone",
-    "invalid_input"
+    {
+      "name": "concurrency",
+      "result": "passed",
+      "requests": 50,
+      "created": 1,
+      "conflicts": 49,
+      "unexpected": 0
+    },
+    {
+      "name": "idempotency",
+      "result": "passed",
+      "replay_statuses": [201, 201, 201],
+      "unique_reservation_ids": 1,
+      "tampered_replay_status": 409
+    },
+    {
+      "name": "timezone",
+      "result": "passed",
+      "first_status": 201,
+      "equivalent_interval_status": 409
+    },
+    {
+      "name": "invalid_input",
+      "result": "passed",
+      "status": 422,
+      "created_records": 0
+    }
   ],
   "summary": {
     "attacks": 4,
     "failures": 0,
     "result": "VERIFICATION BATCH PASSED"
   },
-  "conclusion": "The current local Tablekeeper implementation passed the declared executable checks.",
-  "note": "This artifact is local rehearsal evidence and is not evidence of a BAND Desktop-generated verifier stage."
+  "conclusion": "The four verifier guarantees passed in an independent live-service run.",
+  "limitations": [
+    "Docker daemon was unavailable, so clean-container startup and verification were not performed.",
+    "The verifier execution preceded ledger initialization; this evidence is now linked to control-plane run ba5777c35f60.",
+    "This is not a BAND Desktop recording."
+  ]
 }

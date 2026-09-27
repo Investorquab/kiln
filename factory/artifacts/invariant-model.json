@@ -8,8 +8,8 @@
     "path": "factory/work_orders/tablekeeper.json"
   },
   "run_reference": {
-    "id": null,
-    "status": "unavailable; no active run ledger exists in factory/runs/"
+    "id": "ba5777c35f60",
+    "status": "recorded; model evidence is repository analysis and does not claim live BAND execution"
   },
   "inputs": [
     "factory/work_orders/tablekeeper.json",
