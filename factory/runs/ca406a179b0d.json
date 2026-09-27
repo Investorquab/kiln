@@ -3,8 +3,8 @@
   "work_order": "WO-TABLEKEEPER-001",
   "requirement": "Demonstrate reproducible Tablekeeper defect discovery, repair, and independent verification while preserving the known-good baseline.",
   "created_at": "2026-09-27T04:20:59.643259+00:00",
-  "updated_at": "2026-09-27T04:21:07.092249+00:00",
-  "status": "running",
+  "updated_at": "2026-09-27T04:25:14.092745+00:00",
+  "status": "proved",
   "stages": [
     {
       "name": "architect",
@@ -26,9 +26,9 @@
     },
     {
       "name": "adversary",
-      "status": "failed",
-      "artifact": "factory/artifacts/adversarial-failure.json",
-      "attempt": 1
+      "status": "passed",
+      "artifact": "factory/artifacts/adversarial-repair-retest.json",
+      "attempt": 2
     },
     {
       "name": "repairer",
@@ -38,9 +38,9 @@
     },
     {
       "name": "verifier",
-      "status": "pending",
-      "artifact": null,
-      "attempt": 0
+      "status": "passed",
+      "artifact": "factory/artifacts/independent-repair-verification.json",
+      "attempt": 1
     }
   ],
   "evidence": [
@@ -82,6 +82,22 @@
       "stage": "repairer",
       "status": "passed",
       "artifact": "factory/artifacts/repair-report.json",
+      "attempt": 1
+    },
+    {
+      "event_id": "638a9ad2a4",
+      "at": "2026-09-27T04:24:58.380162+00:00",
+      "stage": "adversary",
+      "status": "passed",
+      "artifact": "factory/artifacts/adversarial-repair-retest.json",
+      "attempt": 2
+    },
+    {
+      "event_id": "446932c64d",
+      "at": "2026-09-27T04:25:14.092745+00:00",
+      "stage": "verifier",
+      "status": "passed",
+      "artifact": "factory/artifacts/independent-repair-verification.json",
       "attempt": 1
     }
   ]

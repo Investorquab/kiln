@@ -1,7 +1,13 @@
 {
   "stage": "verifier",
   "status": "passed",
+  "run_id": "verifier-repair-20260927-0518-test-author",
   "source": "independent local PostgreSQL-backed verification",
+  "summary": {
+    "attacks": 4,
+    "failures": 0,
+    "result": "VERIFICATION BATCH PASSED"
+  },
   "work_order": "WO-TABLEKEEPER-001",
   "baseline": {
     "branch": "integration/20260927-0217",
