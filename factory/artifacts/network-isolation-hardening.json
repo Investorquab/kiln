@@ -1,0 +1,50 @@
+{
+  "stage": "builder",
+  "status": "implemented_runtime_configuration",
+  "source": "local repository change; clean-container runtime verification blocked",
+  "work_order": "WO-TABLEKEEPER-001",
+  "repository": "https://github.com/Investorquab/kiln",
+  "branch": "integration/20260927-0217",
+  "change": {
+    "file": "docker-compose.yml",
+    "configuration": "networks.default.internal: true",
+    "preserved_service_connectivity": [
+      "backend to db using Compose service DNS",
+      "frontend to backend using Compose service DNS"
+    ],
+    "published_host_ports": [
+      "8000:8000",
+      "3000:3000"
+    ]
+  },
+  "checks": [
+    {
+      "command": "docker compose config --quiet",
+      "result": "passed",
+      "exit_code": 0
+    },
+    {
+      "command": "docker compose config",
+      "result": "passed",
+      "exit_code": 0,
+      "observed": [
+        "networks.default.internal=true",
+        "backend published port 8000",
+        "frontend published port 3000",
+        "db, backend, and frontend attached to default"
+      ]
+    }
+  ],
+  "runtime_verification": {
+    "command": "docker compose up --build -d",
+    "result": "blocked",
+    "exit_code": 1,
+    "observed_error": "failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.",
+    "health_checks": "not run",
+    "four_attack_batch": "not run against the isolated container; existing local-service results are not evidence for this change"
+  },
+  "limitations": [
+    "Docker Desktop Linux engine is unavailable, so image rebuild, service DNS, host port reachability, outbound isolation, clean startup, and post-change container attacks remain unverified.",
+    "No new attack result is claimed by this artifact."
+  ]
+}
