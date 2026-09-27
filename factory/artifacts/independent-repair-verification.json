@@ -308,6 +308,88 @@
       "Local PostgreSQL-backed verification only; clean-container startup and behavior remain unverified."
     ]
   },
+  "additional_test_author_execution": {
+    "run_id": "verifier-repair-20260927-0522-test-author",
+    "implementation_revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+    "service": "http://127.0.0.1:18081",
+    "command": "python verification/run_all.py",
+    "environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:18081",
+      "KILN_ATTACK_RUN_ID": "verifier-repair-20260927-0522-test-author"
+    },
+    "exit_code": 0,
+    "stdout_lines": [
+      "run_id=verifier-repair-20260927-0522-test-author",
+      "requests=50",
+      "created=1",
+      "conflicts=49",
+      "unexpected=0",
+      "ATTACK PASSED: exactly one reservation committed",
+      "run_id=verifier-repair-20260927-0522-test-author",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=409",
+      "IDEMPOTENCY ATTACK PASSED",
+      "run_id=verifier-repair-20260927-0522-test-author",
+      "first=201",
+      "equivalent=409",
+      "TIMEZONE ATTACK PASSED",
+      "run_id=verifier-repair-20260927-0522-test-author",
+      "status=422",
+      "created_records=0",
+      "INVALID INPUT ATTACK PASSED",
+      "",
+      "=== verification/attacks/concurrency.py ===",
+      "",
+      "=== verification/attacks/idempotency.py ===",
+      "",
+      "=== verification/attacks/timezone.py ===",
+      "",
+      "=== verification/attacks/invalid_input.py ===",
+      "",
+      "run_id=verifier-repair-20260927-0522-test-author",
+      "attacks=4",
+      "failures=0",
+      "VERIFICATION BATCH PASSED"
+    ],
+    "checks": [
+      {
+        "name": "concurrency",
+        "result": "passed",
+        "requests": 50,
+        "created": 1,
+        "conflicts": 49,
+        "unexpected": 0
+      },
+      {
+        "name": "idempotency",
+        "result": "passed",
+        "replay_statuses": [201, 201, 201],
+        "unique_reservation_ids": 1,
+        "tampered_replay_status": 409
+      },
+      {
+        "name": "timezone",
+        "result": "passed",
+        "first_status": 201,
+        "equivalent_interval_status": 409
+      },
+      {
+        "name": "invalid_input",
+        "result": "passed",
+        "status": 422,
+        "created_records": 0
+      }
+    ],
+    "summary": {
+      "attacks": 4,
+      "failures": 0,
+      "result": "VERIFICATION BATCH PASSED"
+    },
+    "limitations": [
+      "Executed against a local service and not a clean container."
+    ]
+  },
   "conclusion": "The independently reproduced changed-guest replay regression passes after repair, and all four original verification attacks pass on the repaired revision.",
   "limitations": [
     "The service and regression suite used local PostgreSQL schemas; clean-container behavior was not verified.",
