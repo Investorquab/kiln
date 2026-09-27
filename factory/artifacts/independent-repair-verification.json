@@ -240,6 +240,68 @@
       "This additional verifier run was against the local PostgreSQL-backed service; it is independent evidence, not clean-container evidence."
     ]
   },
+  "post_adversary_independent_reproduction": {
+    "run_id": "verifier-repair-20260927-0521-testauthor",
+    "implementation_revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+    "service": "http://127.0.0.1:18081",
+    "database": "PostgreSQL 16.15 database kiln, isolated schema kiln_failure_repair_20260927",
+    "attack_command": "python verification/run_all.py",
+    "attack_environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:18081",
+      "KILN_ATTACK_RUN_ID": "verifier-repair-20260927-0521-testauthor"
+    },
+    "attack_exit_code": 0,
+    "attack_stdout_lines": [
+      "run_id=verifier-repair-20260927-0521-testauthor",
+      "requests=50",
+      "created=1",
+      "conflicts=49",
+      "unexpected=0",
+      "ATTACK PASSED: exactly one reservation committed",
+      "run_id=verifier-repair-20260927-0521-testauthor",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=409",
+      "IDEMPOTENCY ATTACK PASSED",
+      "run_id=verifier-repair-20260927-0521-testauthor",
+      "first=201",
+      "equivalent=409",
+      "TIMEZONE ATTACK PASSED",
+      "run_id=verifier-repair-20260927-0521-testauthor",
+      "status=422",
+      "created_records=0",
+      "INVALID INPUT ATTACK PASSED",
+      "",
+      "=== verification/attacks/concurrency.py ===",
+      "",
+      "=== verification/attacks/idempotency.py ===",
+      "",
+      "=== verification/attacks/timezone.py ===",
+      "",
+      "=== verification/attacks/invalid_input.py ===",
+      "",
+      "run_id=verifier-repair-20260927-0521-testauthor",
+      "attacks=4",
+      "failures=0",
+      "VERIFICATION BATCH PASSED"
+    ],
+    "regression_command": "python -m pytest app/backend/tests/test_reservations.py::test_changed_guest_replay_is_rejected_without_changing_state -q",
+    "regression_environment": {
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+      "PYTHONPATH": "app/backend",
+      "DATABASE_URL": "postgresql://kiln:kiln@localhost:5432/kiln",
+      "PGOPTIONS": "-c search_path=kiln_failure_repair_20260927"
+    },
+    "regression_exit_code": 0,
+    "regression_output": [
+      ".",
+      "1 passed, 2 warnings in 3.19s"
+    ],
+    "result": "Independent full-batch verification and the changed-guest regression passed after the separately recorded Adversary retest.",
+    "limitations": [
+      "Local PostgreSQL-backed verification only; clean-container startup and behavior remain unverified."
+    ]
+  },
   "conclusion": "The independently reproduced changed-guest replay regression passes after repair, and all four original verification attacks pass on the repaired revision.",
   "limitations": [
     "The service and regression suite used local PostgreSQL schemas; clean-container behavior was not verified.",

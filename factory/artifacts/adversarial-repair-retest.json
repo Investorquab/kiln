@@ -1,0 +1,107 @@
+{
+  "stage": "adversary_retest",
+  "status": "passed",
+  "source": "fresh local attack batch executed for the shared post-repair retest task",
+  "work_order": "WO-TABLEKEEPER-001",
+  "baseline": {
+    "revision": "b48720fd148abdd6d2eec7940ed5b8fbcabdc42a",
+    "status": "preserved known-good reference on integration/20260927-0217"
+  },
+  "implementation": {
+    "revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+    "branch": "failure-repair/tablekeeper-20260927",
+    "repaired_defect": "Same idempotency key with a changed guest name is rejected with HTTP 409."
+  },
+  "environment": {
+    "operator": "Test author, executing the shared post-repair Adversary retest task",
+    "service": "FastAPI at http://127.0.0.1:18081",
+    "database": "PostgreSQL 16.15 database kiln, isolated schema kiln_failure_repair_20260927",
+    "health": {
+      "command": "Invoke-RestMethod http://127.0.0.1:18081/health",
+      "output": "{\"status\":\"ok\"}"
+    },
+    "docker": "not used; clean-container behavior remains unverified"
+  },
+  "command": {
+    "executable": "python verification/run_all.py",
+    "working_directory": "kiln",
+    "environment": {
+      "PYTHONPATH": "app/backend",
+      "KILN_BASE_URL": "http://127.0.0.1:18081",
+      "KILN_ATTACK_RUN_ID": "adversary-repair-20260927-0520-testauthor"
+    },
+    "exit_code": 0,
+    "stdout_lines": [
+      "run_id=adversary-repair-20260927-0520-testauthor",
+      "requests=50",
+      "created=1",
+      "conflicts=49",
+      "unexpected=0",
+      "ATTACK PASSED: exactly one reservation committed",
+      "run_id=adversary-repair-20260927-0520-testauthor",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=409",
+      "IDEMPOTENCY ATTACK PASSED",
+      "run_id=adversary-repair-20260927-0520-testauthor",
+      "first=201",
+      "equivalent=409",
+      "TIMEZONE ATTACK PASSED",
+      "run_id=adversary-repair-20260927-0520-testauthor",
+      "status=422",
+      "created_records=0",
+      "INVALID INPUT ATTACK PASSED",
+      "",
+      "=== verification/attacks/concurrency.py ===",
+      "",
+      "=== verification/attacks/idempotency.py ===",
+      "",
+      "=== verification/attacks/timezone.py ===",
+      "",
+      "=== verification/attacks/invalid_input.py ===",
+      "",
+      "run_id=adversary-repair-20260927-0520-testauthor",
+      "attacks=4",
+      "failures=0",
+      "VERIFICATION BATCH PASSED"
+    ]
+  },
+  "checks": [
+    {
+      "name": "concurrency",
+      "result": "passed",
+      "requests": 50,
+      "created": 1,
+      "conflicts": 49,
+      "unexpected": 0
+    },
+    {
+      "name": "idempotency",
+      "result": "passed",
+      "replay_statuses": [201, 201, 201],
+      "unique_reservation_ids": 1,
+      "tampered_replay_status": 409
+    },
+    {
+      "name": "timezone",
+      "result": "passed",
+      "first_status": 201,
+      "equivalent_interval_status": 409
+    },
+    {
+      "name": "invalid_input",
+      "result": "passed",
+      "status": 422,
+      "created_records": 0
+    }
+  ],
+  "summary": {
+    "attacks": 4,
+    "failures": 0,
+    "result": "VERIFICATION BATCH PASSED"
+  },
+  "limitations": [
+    "This retest used the local PostgreSQL-backed service, not a clean container or BAND Desktop runtime.",
+    "The previous independent Adversary failure and Repairer tests are recorded in factory/artifacts/adversarial-failure.json and factory/artifacts/repair-report.json."
+  ]
+}
