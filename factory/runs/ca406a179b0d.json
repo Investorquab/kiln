@@ -1,0 +1,88 @@
+{
+  "run_id": "ca406a179b0d",
+  "work_order": "WO-TABLEKEEPER-001",
+  "requirement": "Demonstrate reproducible Tablekeeper defect discovery, repair, and independent verification while preserving the known-good baseline.",
+  "created_at": "2026-09-27T04:20:59.643259+00:00",
+  "updated_at": "2026-09-27T04:21:07.092249+00:00",
+  "status": "running",
+  "stages": [
+    {
+      "name": "architect",
+      "status": "passed",
+      "artifact": "factory/artifacts/architect-plan.json",
+      "attempt": 1
+    },
+    {
+      "name": "modeler",
+      "status": "passed",
+      "artifact": "factory/artifacts/invariant-model.json",
+      "attempt": 1
+    },
+    {
+      "name": "builder",
+      "status": "passed",
+      "artifact": "factory/artifacts/controlled-defect.json",
+      "attempt": 1
+    },
+    {
+      "name": "adversary",
+      "status": "failed",
+      "artifact": "factory/artifacts/adversarial-failure.json",
+      "attempt": 1
+    },
+    {
+      "name": "repairer",
+      "status": "passed",
+      "artifact": "factory/artifacts/repair-report.json",
+      "attempt": 1
+    },
+    {
+      "name": "verifier",
+      "status": "pending",
+      "artifact": null,
+      "attempt": 0
+    }
+  ],
+  "evidence": [
+    {
+      "event_id": "a1645fb104",
+      "at": "2026-09-27T04:21:06.279878+00:00",
+      "stage": "architect",
+      "status": "passed",
+      "artifact": "factory/artifacts/architect-plan.json",
+      "attempt": 1
+    },
+    {
+      "event_id": "b81d6d4db6",
+      "at": "2026-09-27T04:21:06.549969+00:00",
+      "stage": "modeler",
+      "status": "passed",
+      "artifact": "factory/artifacts/invariant-model.json",
+      "attempt": 1
+    },
+    {
+      "event_id": "c790f4a584",
+      "at": "2026-09-27T04:21:06.740625+00:00",
+      "stage": "builder",
+      "status": "passed",
+      "artifact": "factory/artifacts/controlled-defect.json",
+      "attempt": 1
+    },
+    {
+      "event_id": "806b8db000",
+      "at": "2026-09-27T04:21:06.915766+00:00",
+      "stage": "adversary",
+      "status": "failed",
+      "artifact": "factory/artifacts/adversarial-failure.json",
+      "attempt": 1
+    },
+    {
+      "event_id": "1dc7bef223",
+      "at": "2026-09-27T04:21:07.092249+00:00",
+      "stage": "repairer",
+      "status": "passed",
+      "artifact": "factory/artifacts/repair-report.json",
+      "attempt": 1
+    }
+  ]
+}
