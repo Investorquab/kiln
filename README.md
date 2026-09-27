@@ -10,7 +10,7 @@ Kiln is the **factory**, not the Tablekeeper reservation product. A clean-room w
 
 For the current demonstration, the workload is a clean-room Tablekeeper-style reservation service.
 
-The hackathon asks for the factory, the run that produced the result, and the result. citeturn0search0
+The hackathon asks for the factory, the run that produced the result, and the result.
 
 ## Factory floor
 
@@ -34,8 +34,6 @@ REPAIRER ──────────┐
 
 The control plane is deterministic and evidence-aware. It records stage status, attempts, artifacts, and evidence events. It does **not** pretend to invoke BAND agents; BAND Desktop is the agent collaboration/execution surface.
 
-This separation follows a pattern visible in current software-factory implementations: orchestration owns lifecycle and gates, coding workers produce changes, and an independent verifier owns completion. citeturn0search1turn0search4
-
 ## Repository arrangement
 
 - `factory/work_orders/` — replaceable workload input
@@ -49,7 +47,19 @@ This separation follows a pattern visible in current software-factory implementa
 - `app/` — current product output
 - `docs/` — factory, BAND, container, and submission operating docs
 
-The structure intentionally separates product truth/work orders from execution and verification, a pattern also used by other factory designs.
+## Runtime contract
+
+The demo runtime publishes explicit resource and concurrency constraints:
+
+| Service | CPU cap | Memory cap |
+|---|---:|---:|
+| PostgreSQL | 1.0 CPU | 512 MiB |
+| Backend | 1.0 CPU | 512 MiB |
+| Frontend | 1.0 CPU | 512 MiB |
+
+The Compose runtime network is marked `internal: true`. This preserves container-to-container service discovery while removing the runtime network's default external connectivity. Host access to the published application ports remains available for the demo.
+
+The adversarial verification contract uses **50 concurrent requests** against the same resource/time slot. The expected result is exactly one committed reservation and 49 conflicts, with zero unexpected outcomes. The suite also verifies idempotency replay, equivalent timezone representations, and invalid input.
 
 ## Quick start
 
@@ -72,7 +82,6 @@ To rehearse the complete deterministic factory ledger against the local workload
 This creates a run ledger, records the Architect/Modeler/Builder stages, executes the real local attack suite,
 and records Adversary and Verifier evidence. A failing attack stops the rehearsal before Verifier and leaves the
 run in the Repairer path. The rehearsal is local evidence and is not a claim of a BAND Desktop run.
-
 
 Run-ledger provenance can also be checked directly:
 
