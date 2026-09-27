@@ -1,0 +1,32 @@
+{
+  "stage": "builder",
+  "status": "defect_injected_pending_adversarial_execution",
+  "source": "controlled failure-repair experiment",
+  "work_order": "WO-TABLEKEEPER-001",
+  "baseline": {
+    "branch": "integration/20260927-0217",
+    "revision": "b48720fd148abdd6d2eec7940ed5b8fbcabdc42a",
+    "status": "preserved known-good reference; existing passing baseline evidence remains unchanged"
+  },
+  "experiment": {
+    "branch": "failure-repair/tablekeeper-20260927",
+    "defect_revision": "3c152aedb1b513e08cc6674dce6be5a961c5de92"
+  },
+  "change": {
+    "file": "app/backend/app/main.py",
+    "description": "Removed the guest_name mismatch term from the existing idempotency-key request comparison. No other implementation behavior was intentionally changed.",
+    "mandates_changed": false
+  },
+  "reproduction": {
+    "attack": "verification/attacks/idempotency.py",
+    "command": "python verification/attacks/idempotency.py",
+    "input": "Submit the script's PAYLOAD with KEY, then replay the same key with guest_name changed to 'Tampered Replay'.",
+    "baseline_expected": "Replay is rejected with HTTP 409.",
+    "defect_expected": "Replay is incorrectly accepted with HTTP 201 and returns the existing reservation.",
+    "execution_status": "not_run_by_builder; independent Adversary reproduction pending"
+  },
+  "limitations": [
+    "This artifact records the intentional defect only; it is not evidence that an attack has executed or failed.",
+    "The defect branch is separate from the preserved baseline branch."
+  ]
+}
