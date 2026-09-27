@@ -1,46 +1,173 @@
 {
   "stage": "adversary",
   "status": "passed",
-  "source": "local executable verification rehearsal",
+  "source": "local live-service attack run; not a BAND Desktop recording",
   "work_order": "WO-TABLEKEEPER-001",
-  "attacks": [
+  "run_reference": {
+    "control_plane_run_id": "ba5777c35f60",
+    "note": "Linked to the Kiln control-plane ledger; attack evidence remains from the local live-service run, not a BAND Desktop recording."
+  },
+  "implementation": {
+    "repository": "https://github.com/Investorquab/kiln",
+    "path": "C:\\Users\\NEW\\Jam\\7ed2e992fac21063755daf8b\\17b0699d0077a6587eabc92d\\ae3101fb61ddf75ac7062504\\kiln",
+    "branch": "investigator/tablekeeper-invariant-model",
+    "revision": "0ac6a4b6544df03afd8b0c9f85646f7a38d99673",
+    "implementation_source": "The reservation implementation is unchanged from base b60214d13f96faea7521da469d3bc679b0528c82; the commit adds only the Modeler artifact."
+  },
+  "environment": {
+    "os": "Windows",
+    "service": "FastAPI via Uvicorn on 127.0.0.1:8000",
+    "database": "PostgreSQL 16.15 on localhost:5432",
+    "docker": {
+      "status": "unavailable",
+      "observed_error": "failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified."
+    },
+    "health": {
+      "command": "Invoke-RestMethod http://127.0.0.1:8000/health | ConvertTo-Json -Compress",
+      "output": "{\"status\":\"ok\"}"
+    }
+  },
+  "command": {
+    "working_directory": "kiln",
+    "command": "python verification/run_all.py",
+    "environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:8000",
+      "KILN_ATTACK_RUN_ID": "set uniquely per run"
+    }
+  },
+  "attempts": [
     {
-      "name": "concurrency",
-      "target": "INV-001",
-      "requests": 50,
-      "created": 1,
-      "conflicts": 49,
-      "unexpected": 0,
-      "result": "passed"
+      "run_id": "adversary-20260927-0153",
+      "status": "passed",
+      "output": [
+        "requests=50",
+        "created=1",
+        "conflicts=49",
+        "unexpected=0",
+        "ATTACK PASSED: exactly one reservation committed",
+        "replay_statuses=[201, 201, 201]",
+        "unique_reservation_ids=1",
+        "tampered_replay_status=409",
+        "IDEMPOTENCY ATTACK PASSED",
+        "first=201",
+        "equivalent=409",
+        "TIMEZONE ATTACK PASSED",
+        "status=422",
+        "created_records=0",
+        "INVALID INPUT ATTACK PASSED",
+        "attacks=4",
+        "failures=0",
+        "VERIFICATION BATCH PASSED"
+      ],
+      "attacks": [
+        {
+          "name": "concurrency",
+          "status": "passed",
+          "requests": 50,
+          "created": 1,
+          "conflicts": 49,
+          "unexpected": 0,
+          "evidence": "Exactly one reservation committed for simultaneous conflicting requests."
+        },
+        {
+          "name": "idempotency",
+          "status": "passed",
+          "replay_statuses": [201, 201, 201],
+          "unique_reservation_ids": 1,
+          "tampered_replay_status": 409,
+          "evidence": "Same-key/same-payload replay returned one reservation; changed payload was rejected."
+        },
+        {
+          "name": "timezone",
+          "status": "passed",
+          "first": 201,
+          "equivalent": 409,
+          "evidence": "The equivalent interval represented in UTC conflicted with the already committed offset-form interval."
+        },
+        {
+          "name": "invalid_input",
+          "status": "passed",
+          "status_code": 422,
+          "created_records": 0,
+          "evidence": "Naive timestamps were rejected and no reservation with the attack key was found."
+        }
+      ],
+      "failures": []
     },
     {
-      "name": "idempotency",
-      "target": "INV-002",
-      "replay_statuses": [201, 201, 201],
-      "unique_reservation_ids": 1,
-      "tampered_replay_status": 409,
-      "result": "passed"
-    },
-    {
-      "name": "timezone",
-      "target": "INV-003",
-      "first": 201,
-      "equivalent": 409,
-      "result": "passed"
-    },
-    {
-      "name": "invalid_input",
-      "target": "INV-004",
-      "status_code": 422,
-      "created_records": 0,
-      "result": "passed"
+      "run_id": "adversary-retest-20260927-0153",
+      "status": "passed",
+      "output": [
+        "requests=50",
+        "created=1",
+        "conflicts=49",
+        "unexpected=0",
+        "ATTACK PASSED: exactly one reservation committed",
+        "replay_statuses=[201, 201, 201]",
+        "unique_reservation_ids=1",
+        "tampered_replay_status=409",
+        "IDEMPOTENCY ATTACK PASSED",
+        "first=201",
+        "equivalent=409",
+        "TIMEZONE ATTACK PASSED",
+        "status=422",
+        "created_records=0",
+        "INVALID INPUT ATTACK PASSED",
+        "attacks=4",
+        "failures=0",
+        "VERIFICATION BATCH PASSED"
+      ],
+      "attacks": [
+        {
+          "name": "concurrency",
+          "status": "passed",
+          "requests": 50,
+          "created": 1,
+          "conflicts": 49,
+          "unexpected": 0,
+          "evidence": "Exactly one reservation committed for simultaneous conflicting requests."
+        },
+        {
+          "name": "idempotency",
+          "status": "passed",
+          "replay_statuses": [201, 201, 201],
+          "unique_reservation_ids": 1,
+          "tampered_replay_status": 409,
+          "evidence": "Same-key/same-payload replay returned one reservation; changed payload was rejected."
+        },
+        {
+          "name": "timezone",
+          "status": "passed",
+          "first": 201,
+          "equivalent": 409,
+          "evidence": "The equivalent interval represented in UTC conflicted with the already committed offset-form interval."
+        },
+        {
+          "name": "invalid_input",
+          "status": "passed",
+          "status_code": 422,
+          "created_records": 0,
+          "evidence": "Naive timestamps were rejected and no reservation with the attack key was found."
+        }
+      ],
+      "failures": []
     }
   ],
   "summary": {
-    "attacks": 4,
+    "attacks_per_batch": 4,
+    "batches": 2,
     "failures": 0,
-    "result": "ATTACK BATCH PASSED"
+    "result": "ADVERSARIAL BATCHES PASSED"
   },
-  "handoff": "Verifier independently reproduces the attack batch.",
-  "note": "These results are from local executable verification. They are not evidence of a BAND Desktop-generated adversarial stage."
+  "repair": {
+    "required": false,
+    "reason": "Both complete attack batches passed; no verified implementation failure was observed."
+  },
+  "handoff": "Verifier: independently reproduce the four guarantees using a fresh run ID and inspect the recorded outputs. Clean-container startup remains unverified because Docker was unavailable.",
+  "unresolved_risks": [
+    "Docker/clean-container startup was not tested because the Docker Desktop engine was unavailable.",
+    "The Adversary run used the local PostgreSQL-backed service, not a containerized service or BAND Desktop recording.",
+    "The control-plane ledger was initialized after the attack run and now links this report; no BAND Desktop recording exists.",
+    "The Modeler commit is local and unpushed; its commit adds only the model artifact and contains no implementation changes."
+  ]
 }
