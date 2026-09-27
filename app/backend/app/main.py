@@ -146,7 +146,6 @@ def create_reservation(
                         previous.resource_id != request.resource_id
                         or previous.start_at != start
                         or previous.end_at != end
-                        or previous.guest_name != request.guest_name
                     ):
                         raise HTTPException(
                             status_code=409,
