@@ -1,0 +1,143 @@
+{
+  "stage": "verifier",
+  "status": "passed",
+  "source": "independent local PostgreSQL-backed verification",
+  "work_order": "WO-TABLEKEEPER-001",
+  "baseline": {
+    "branch": "integration/20260927-0217",
+    "revision": "b48720fd148abdd6d2eec7940ed5b8fbcabdc42a",
+    "status": "preserved known-good reference"
+  },
+  "repair": {
+    "branch": "failure-repair/tablekeeper-20260927",
+    "defect_revision": "3c152aedb1b513e08cc6674dce6be5a961c5de92",
+    "repair_revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+    "repair_artifact": "factory/artifacts/repair-report.json"
+  },
+  "environment": {
+    "service": "FastAPI from the repaired checkout at http://127.0.0.1:8013",
+    "database": "PostgreSQL 16.15 database kiln, isolated schema kiln_test_author_verifier_20260927",
+    "health": {
+      "command": "Invoke-RestMethod http://127.0.0.1:8013/health",
+      "output": "{\"status\":\"ok\"}"
+    },
+    "docker": "not used; clean-container behavior remains unverified"
+  },
+  "regression": {
+    "test": "app/backend/tests/test_reservations.py::test_changed_guest_replay_is_rejected_without_changing_state",
+    "database_schema": "kiln_test_author_repaired_20260927",
+    "defect_revision_result": {
+      "revision": "3c152aedb1b513e08cc6674dce6be5a961c5de92",
+      "command": "python -m pytest app/backend/tests/test_reservations.py -k changed_guest_replay_is_rejected_without_changing_state -q",
+      "exit_code": 1,
+      "output": [
+        "FAILED app/backend/tests/test_reservations.py::test_changed_guest_replay_is_rejected_without_changing_state",
+        "assert changed_replay.status_code == 409",
+        "E assert 201 == 409",
+        "E + where 201 = <Response [201 Created]>.status_code",
+        "1 failed, 8 deselected, 2 warnings in 2.62s"
+      ],
+      "proof": "The original reservation row remained unchanged, but the tampered replay returned 201 instead of 409."
+    },
+    "repaired_revision_result": {
+      "revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+      "command": "python -m pytest app/backend/tests/test_reservations.py -k changed_guest_replay_is_rejected_without_changing_state -q",
+      "exit_code": 0,
+      "output": [
+        ".",
+        "1 passed, 8 deselected, 2 warnings in 1.88s"
+      ]
+    },
+    "full_backend_suite": {
+      "command": "python -m pytest app/backend/tests -q",
+      "database_schema": "kiln_test_author_repaired_20260927",
+      "exit_code": 0,
+      "output": [
+        ".........",
+        "9 passed, 2 warnings in 4.84s"
+      ]
+    }
+  },
+  "attack_batch": {
+    "run_id": "verifier-repair-20260927-0518-test-author",
+    "command": "python verification/run_all.py",
+    "environment": {
+      "KILN_BASE_URL": "http://127.0.0.1:8013",
+      "KILN_ATTACK_RUN_ID": "verifier-repair-20260927-0518-test-author"
+    },
+    "exit_code": 0,
+    "stdout_lines": [
+      "run_id=verifier-repair-20260927-0518-test-author",
+      "requests=50",
+      "created=1",
+      "conflicts=49",
+      "unexpected=0",
+      "ATTACK PASSED: exactly one reservation committed",
+      "run_id=verifier-repair-20260927-0518-test-author",
+      "replay_statuses=[201, 201, 201]",
+      "unique_reservation_ids=1",
+      "tampered_replay_status=409",
+      "IDEMPOTENCY ATTACK PASSED",
+      "run_id=verifier-repair-20260927-0518-test-author",
+      "first=201",
+      "equivalent=409",
+      "TIMEZONE ATTACK PASSED",
+      "run_id=verifier-repair-20260927-0518-test-author",
+      "status=422",
+      "created_records=0",
+      "INVALID INPUT ATTACK PASSED",
+      "",
+      "=== verification/attacks/concurrency.py ===",
+      "",
+      "=== verification/attacks/idempotency.py ===",
+      "",
+      "=== verification/attacks/timezone.py ===",
+      "",
+      "=== verification/attacks/invalid_input.py ===",
+      "",
+      "run_id=verifier-repair-20260927-0518-test-author",
+      "attacks=4",
+      "failures=0",
+      "VERIFICATION BATCH PASSED"
+    ],
+    "checks": [
+      {
+        "name": "concurrency",
+        "result": "passed",
+        "requests": 50,
+        "created": 1,
+        "conflicts": 49,
+        "unexpected": 0
+      },
+      {
+        "name": "idempotency",
+        "result": "passed",
+        "replay_statuses": [201, 201, 201],
+        "unique_reservation_ids": 1,
+        "tampered_replay_status": 409
+      },
+      {
+        "name": "timezone",
+        "result": "passed",
+        "first_status": 201,
+        "equivalent_interval_status": 409
+      },
+      {
+        "name": "invalid_input",
+        "result": "passed",
+        "status": 422,
+        "created_records": 0
+      }
+    ],
+    "summary": {
+      "attacks": 4,
+      "failures": 0,
+      "result": "VERIFICATION BATCH PASSED"
+    }
+  },
+  "conclusion": "The independently reproduced changed-guest replay regression passes after repair, and all four original verification attacks pass on the repaired revision.",
+  "limitations": [
+    "The service and regression suite used local PostgreSQL schemas; clean-container behavior was not verified.",
+    "This is not a BAND Desktop recording."
+  ]
+}
