@@ -65,6 +65,30 @@ def test_same_idempotency_key_same_payload_is_replay_safe():
     assert retry.json()["id"] == first.json()["id"]
 
 
+def test_changed_guest_replay_is_rejected_without_changing_state():
+    key = "changed-guest-state-preservation"
+    original_payload = payload()
+    first = client.post(
+        "/reservations",
+        json=original_payload,
+        headers={"Idempotency-Key": key},
+    )
+    changed_replay = client.post(
+        "/reservations",
+        json={**original_payload, "guest_name": "Changed Guest"},
+        headers={"Idempotency-Key": key},
+    )
+    matching_rows = [
+        reservation
+        for reservation in client.get("/reservations").json()
+        if reservation["idempotency_key"] == key
+    ]
+
+    assert first.status_code == 201
+    assert matching_rows == [first.json()]
+    assert changed_replay.status_code == 409
+
+
 def test_timezone_equivalent_windows_conflict():
     first = client.post("/reservations", json=payload(), headers={"Idempotency-Key": "tz-a"})
     equivalent = {
