@@ -1,0 +1,58 @@
+{
+  "status": "passed",
+  "environment": {
+    "runtime": "Docker Compose",
+    "network": "internal",
+    "fresh_build": true,
+    "no_cache": true
+  },
+  "runtime": {
+    "services": {
+      "database": "healthy",
+      "backend": "running",
+      "frontend": "running"
+    },
+    "internal_service_access": {
+      "backend_to_database": "passed",
+      "frontend_to_backend": "passed",
+      "host_to_backend_container_ip": "passed",
+      "host_to_frontend_container_ip": "passed"
+    },
+    "outbound_network": "blocked"
+  },
+  "resource_limits": {
+    "cpu_per_service": "1.0",
+    "memory_per_service": "512MiB"
+  },
+  "verification": {
+    "run_id": "643388ec8c47",
+    "attacks": 4,
+    "failures": 0,
+    "concurrency": {
+      "requests": 50,
+      "created": 1,
+      "conflicts": 49,
+      "unexpected": 0
+    },
+    "idempotency": {
+      "replay_statuses": [201, 201, 201],
+      "unique_reservation_ids": 1,
+      "tampered_replay_status": 409
+    },
+    "timezone": {
+      "first": 201,
+      "equivalent": 409
+    },
+    "invalid_input": {
+      "status": 422,
+      "created_records": 0
+    },
+    "result": "VERIFICATION BATCH PASSED"
+  },
+  "notes": [
+    "Runtime was rebuilt with docker compose build --no-cache.",
+    "The Compose runtime network is internal and has no external DNS/connectivity.",
+    "Published host ports were not reachable through localhost with the internal network, but the services were reachable through their container IPs.",
+    "The application services and adversarial verification suite passed against the fresh runtime."
+  ]
+}
