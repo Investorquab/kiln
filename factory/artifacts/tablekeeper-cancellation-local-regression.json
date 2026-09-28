@@ -1,0 +1,50 @@
+{
+  "run_id": "977a015f9c71",
+  "work_order": "WO-TABLEKEEPER-002",
+  "workload": "tablekeeper",
+  "stage": "verifier",
+  "status": "passed",
+  "source": "local executable extension regression",
+  "attacks": [
+    {
+      "name": "concurrency",
+      "status": "passed",
+      "requests": 50,
+      "created": 1,
+      "conflicts": 49,
+      "unexpected": 0
+    },
+    {
+      "name": "idempotency",
+      "status": "passed",
+      "replay_statuses": [201, 201, 201],
+      "unique_reservation_ids": 1,
+      "tampered_replay_status": 409
+    },
+    {
+      "name": "timezone",
+      "status": "passed",
+      "first": 201,
+      "equivalent": 409
+    },
+    {
+      "name": "invalid_input",
+      "status": "passed",
+      "status_code": 422,
+      "created_records": 0
+    },
+    {
+      "name": "cancellation",
+      "status": "passed",
+      "same_key_replay_statuses": [204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204],
+      "competing_key_statuses": [409, 409, 409, 409, 409, 409, 409, 409, 204, 409, 409, 409, 409, 409, 409, 409, 409, 409, 409, 409],
+      "missing_reservation_status": 404
+    }
+  ],
+  "summary": {
+    "attacks": 5,
+    "failures": 0,
+    "result": "EXTENSION REGRESSION PASSED"
+  },
+  "note": "Local extension evidence only; not a BAND Desktop-generated stage. This does not substitute for the required BAND Adversary, Repairer, and independent Verifier stages."
+}
