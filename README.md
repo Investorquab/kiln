@@ -57,7 +57,7 @@ The demo runtime publishes explicit resource and concurrency constraints:
 | Backend | 1.0 CPU | 512 MiB |
 | Frontend | 1.0 CPU | 512 MiB |
 
-The Compose runtime network is marked `internal: true`. This preserves container-to-container service discovery while removing the runtime network's default external connectivity. Host access to the published application ports remains available for the demo.
+The Compose runtime network is marked `internal: true`. This preserves container-to-container service discovery while removing the runtime network's default external connectivity. Because the Compose network is internal, the services are verified from inside the runtime network (and through container IPs); do not rely on localhost published-port access for the clean-container proof.
 
 The adversarial verification contract uses **50 concurrent requests** against the same resource/time slot. The expected result is exactly one committed reservation and 49 conflicts, with zero unexpected outcomes. The suite also verifies idempotency replay, equivalent timezone representations, and invalid input.
 
