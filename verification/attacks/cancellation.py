@@ -9,16 +9,16 @@ BASE_URL = os.environ.get("KILN_BASE_URL", "http://localhost:8000")
 RUN_ID = os.environ.get("KILN_ATTACK_RUN_ID", uuid.uuid4().hex[:12])
 
 
-def create_reservation() -> str:
+def create_reservation(resource_suffix: str) -> str:
     response = httpx.post(
         f"{BASE_URL}/reservations",
         json={
-            "resource_id": f"cancel-table-{RUN_ID}",
+            "resource_id": f"cancel-table-{RUN_ID}-{resource_suffix}",
             "start_at": "2026-09-30T18:00:00+01:00",
             "end_at": "2026-09-30T19:00:00+01:00",
-            "guest_name": "Cancellation Attack",
+            "guest_name": f"Cancellation Attack {resource_suffix}",
         },
-        headers={"Idempotency-Key": f"cancel-create-{RUN_ID}"},
+        headers={"Idempotency-Key": f"cancel-create-{RUN_ID}-{resource_suffix}"},
         timeout=10,
     )
     response.raise_for_status()
@@ -26,7 +26,7 @@ def create_reservation() -> str:
 
 
 def main() -> int:
-    reservation_id = create_reservation()
+    reservation_id = create_reservation("primary")
 
     def same_key(_: int) -> int:
         return httpx.delete(
@@ -40,7 +40,7 @@ def main() -> int:
 
     replay_passed = replay_statuses == [204] * 20
 
-    second_reservation = create_reservation()
+    second_reservation = create_reservation("competing")
 
     def competing_key(index: int) -> int:
         return httpx.delete(
