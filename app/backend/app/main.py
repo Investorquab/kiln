@@ -12,7 +12,7 @@ DATABASE_URL = os.environ.get(
     "postgresql://kiln:kiln@localhost:5432/kiln",
 )
 
-app = FastAPI(title="Kiln Tablekeeper Demo", version="0.3.0")
+app = FastAPI(title="Kiln Tablekeeper Demo", version="0.4.0")
 
 
 class ReservationRequest(BaseModel):
@@ -52,7 +52,25 @@ def ensure_schema() -> None:
                 end_at timestamptz NOT NULL,
                 guest_name text NOT NULL,
                 idempotency_key text NOT NULL UNIQUE,
-                CHECK (end_at > start_at)
+                status text NOT NULL DEFAULT 'active',
+                cancelled_at timestamptz,
+                CHECK (end_at > start_at),
+                CHECK (status IN ('active', 'cancelled'))
+            )
+            """
+        )
+        conn.execute(
+            "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active'"
+        )
+        conn.execute(
+            "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS cancelled_at timestamptz"
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS cancellation_requests (
+                idempotency_key text PRIMARY KEY,
+                reservation_id uuid NOT NULL REFERENCES reservations(id),
+                created_at timestamptz NOT NULL DEFAULT now()
             )
             """
         )
@@ -159,6 +177,7 @@ def create_reservation(
                     SELECT 1
                     FROM reservations
                     WHERE resource_id = %s
+                      AND status = 'active'
                       AND start_at < %s
                       AND %s < end_at
                     LIMIT 1
@@ -190,5 +209,76 @@ def create_reservation(
                 ).fetchone()
 
                 return row_to_reservation(row)
+    except HTTPException:
+        raise
+
+
+
+@app.delete("/reservations/{reservation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def cancel_reservation(
+    reservation_id: UUID,
+    idempotency_key: str = Header(min_length=1, alias="Idempotency-Key"),
+) -> None:
+    try:
+        with connection() as conn:
+            with conn.transaction():
+                conn.execute(
+                    "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                    (f"reservation:{reservation_id}",),
+                )
+                conn.execute(
+                    "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                    (f"cancel-idempotency:{idempotency_key}",),
+                )
+
+                existing_request = conn.execute(
+                    """
+                    SELECT reservation_id
+                    FROM cancellation_requests
+                    WHERE idempotency_key = %s
+                    """,
+                    (idempotency_key,),
+                ).fetchone()
+
+                if existing_request:
+                    if existing_request[0] != reservation_id:
+                        raise HTTPException(
+                            status_code=409,
+                            detail="idempotency key was already used for a different cancellation",
+                        )
+                    return None
+
+                reservation = conn.execute(
+                    """
+                    SELECT status
+                    FROM reservations
+                    WHERE id = %s
+                    FOR UPDATE
+                    """,
+                    (reservation_id,),
+                ).fetchone()
+
+                if reservation is None:
+                    raise HTTPException(status_code=404, detail="reservation not found")
+
+                if reservation[0] != "active":
+                    raise HTTPException(status_code=409, detail="reservation is already cancelled")
+
+                conn.execute(
+                    """
+                    UPDATE reservations
+                    SET status = 'cancelled', cancelled_at = now()
+                    WHERE id = %s AND status = 'active'
+                    """,
+                    (reservation_id,),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO cancellation_requests (idempotency_key, reservation_id)
+                    VALUES (%s, %s)
+                    """,
+                    (idempotency_key, reservation_id),
+                )
+                return None
     except HTTPException:
         raise
