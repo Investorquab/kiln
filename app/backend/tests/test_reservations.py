@@ -139,9 +139,12 @@ def test_cancellation_is_idempotent():
     assert first.status_code == 204
     assert retry.status_code == 204
 
-    rows = client.get("/reservations").json()
-    assert rows[0]["id"] == reservation_id
-    assert rows[0]["status"] == "cancelled" if "status" in rows[0] else True
+    with connection() as conn:
+        row = conn.execute(
+            "SELECT status FROM reservations WHERE id = %s",
+            (reservation_id,),
+        ).fetchone()
+    assert row[0] == "cancelled"
 
 
 def test_cancellation_key_cannot_target_different_reservation():
