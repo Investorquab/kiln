@@ -1,0 +1,24 @@
+{
+  "stage": "architect",
+  "status": "passed",
+  "source": "local extension design review",
+  "work_order": "WO-TABLEKEEPER-002",
+  "requirement": "Extend the reservation service with a safe, idempotent reservation cancellation state transition without breaking the existing booking guarantees.",
+  "implementation_plan": [
+    "Represent cancellation as an explicit reservation state transition.",
+    "Serialize cancellation operations by reservation and cancellation idempotency key.",
+    "Record cancellation idempotency requests atomically with the state transition.",
+    "Exclude cancelled reservations from future overlap checks.",
+    "Preserve the original concurrency, idempotency, timezone, and invalid-input guarantees.",
+    "Verify the extension with dedicated cancellation attacks plus the original regression suite."
+  ],
+  "critical_guarantees": [
+    "An active reservation can transition to cancelled exactly once.",
+    "A repeated cancellation key is replay-safe and produces no second side effect.",
+    "A cancellation key cannot be reused for a different reservation.",
+    "A missing reservation cannot create cancellation state.",
+    "A cancelled reservation does not block a replacement booking."
+  ],
+  "handoff": "Modeler derives executable extension invariants.",
+  "note": "Local extension evidence only; not a BAND Desktop-generated stage."
+}
