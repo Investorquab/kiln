@@ -1,0 +1,21 @@
+{
+  "stage": "builder",
+  "status": "passed",
+  "source": "local extension implementation review",
+  "work_order": "WO-TABLEKEEPER-002",
+  "implementation": [
+    "reservation status and cancellation timestamp",
+    "cancellation_requests idempotency ledger",
+    "reservation-scoped advisory locking",
+    "cancellation-key advisory locking",
+    "atomic active-to-cancelled transition",
+    "active-only overlap checks"
+  ],
+  "tests": [
+    "12 backend integration tests passed locally",
+    "five-attack extension regression passed locally"
+  ],
+  "handoff": "Adversary executes cancellation attacks and regression attacks against the implemented extension.",
+  "open_failures": [],
+  "note": "Local extension evidence only; not a BAND Desktop-generated build stage."
+}
