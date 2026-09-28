@@ -1,0 +1,74 @@
+{
+  "stage": "repairer",
+  "status": "passed",
+  "operator": "quadribello3/reviewer",
+  "source": "independent Reviewer inspection and local PostgreSQL-backed test execution",
+  "work_order": "WO-TABLEKEEPER-001",
+  "reviewed_at": "2026-09-28T12:31:54.0836292+01:00",
+  "baseline": {
+    "revision": "b48720fd148abdd6d2eec7940ed5b8fbcabdc42a",
+    "preserved": true
+  },
+  "failure_evidence": {
+    "artifact": "factory/artifacts/adversarial-failure.json",
+    "defect_revision": "3c152aedb1b513e08cc6674dce6be5a961c5de92",
+    "observed": "Same-key replay with a different guest_name returned HTTP 201 instead of HTTP 409.",
+    "reviewer_assessment": "The recorded attack and full-batch outputs directly demonstrate the missing payload equality check; the other three attack classes passed on the defective revision."
+  },
+  "repair_assessment": {
+    "implementation_revision": "50028b832336eb1cff7406f2451c75157e8da39c",
+    "current_checkout_revision": "6b50e5ed09888102a74613ab1123c646aa4864ef",
+    "files": {
+      "app/backend/app/main.py": {
+        "line": 149,
+        "evidence": "The existing idempotency payload mismatch predicate includes previous.guest_name != request.guest_name."
+      },
+      "app/backend/tests/test_reservations.py": {
+        "line": 68,
+        "test": "test_changed_guest_replay_is_rejected_without_changing_state",
+        "evidence": "Creates an original reservation, tries a changed-guest same-key replay, asserts only the original row remains, and requires HTTP 409."
+      }
+    },
+    "reviewer_assessment": "The committed repair is the minimal correction for the diagnosed defect and the caller-level regression checks both the response and persisted state. No additional implementation change was needed."
+  },
+  "reviewer_checks": {
+    "environment": {
+      "database": "PostgreSQL database kiln",
+      "schema": "kiln_failure_repair_20260927",
+      "database_url": "postgresql://[redacted]@127.0.0.1:5432/kiln",
+      "pgoptions": "-c search_path=kiln_failure_repair_20260927",
+      "pythonpath": "app\\backend",
+      "pytest_disable_plugin_autoload": "1",
+      "service_health": {
+        "url": "http://127.0.0.1:18081/health",
+        "result": "unreachable from Reviewer runtime; no HTTP service verification claimed"
+      },
+      "docker": "not used; clean-container behavior not verified"
+    },
+    "commands": [
+      {
+        "command": "python -m pytest app\\backend\\tests\\test_reservations.py::test_changed_guest_replay_is_rejected_without_changing_state -q",
+        "exit_code": 0,
+        "stdout_lines": [
+          ".",
+          "1 passed, 2 warnings in 5.06s"
+        ]
+      },
+      {
+        "command": "python -m pytest app\\backend\\tests -q",
+        "exit_code": 0,
+        "stdout_lines": [
+          ".........",
+          "9 passed, 2 warnings in 5.66s"
+        ]
+      }
+    ],
+    "warnings": "Both pytest runs emitted two FastAPI on_event deprecation warnings."
+  },
+  "conclusion": "Reviewer inspected the failure witness and committed repair, independently ran the regression and backend suite successfully, and found the existing change satisfies the defect. This artifact records Reviewer verification only; it does not claim authorship of the repair or substitute for the pending post-repair Adversary and Verifier stages.",
+  "limitations": [
+    "The local service health check at 127.0.0.1:18081 was unreachable from this runtime; Reviewer ran database-backed pytest tests directly.",
+    "Docker and clean-container behavior remain unverified.",
+    "Investigator must still run the post-repair four-attack batch with a fresh run ID, followed by Integrator's independent Verifier run."
+  ]
+}
