@@ -146,6 +146,11 @@ def test_cancellation_is_idempotent():
         ).fetchone()
     assert row[0] == "cancelled"
 
+    listed = client.get("/reservations")
+    assert listed.status_code == 200
+    assert listed.json()[0]["status"] == "cancelled"
+    assert listed.json()[0]["cancelled_at"] is not None
+
 
 def test_cancellation_key_cannot_target_different_reservation():
     first = client.post(
