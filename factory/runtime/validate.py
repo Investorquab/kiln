@@ -38,6 +38,19 @@ def check_stage_shape(name: str, document: dict) -> list[str]:
 def main() -> int:
     errors: list[str] = []
 
+    extension_work_order = load("factory/work_orders/tablekeeper-cancellation.json")
+    errors.extend(
+        check_keys(
+            "extension work order",
+            extension_work_order,
+            ("work_order_id", "workload", "requirement", "acceptance", "evidence_required"),
+        )
+    )
+    if extension_work_order.get("work_order_id") != "WO-TABLEKEEPER-002":
+        errors.append("extension work order: unexpected work_order_id")
+    if not isinstance(extension_work_order.get("acceptance"), list) or not extension_work_order["acceptance"]:
+        errors.append("extension work order: acceptance must be a non-empty list")
+
     work_order = load("factory/work_orders/tablekeeper.json")
     errors.extend(
         check_keys(
@@ -106,6 +119,39 @@ def main() -> int:
     )
     if summary.get("failures") != 0 or summary.get("result") != "VERIFICATION BATCH PASSED":
         errors.append("local verification report: recorded result is not a passing batch")
+
+    extension_regression = load("factory/artifacts/tablekeeper-cancellation-local-regression.json")
+    errors.extend(
+        check_keys(
+            "extension local regression",
+            extension_regression,
+            ("run_id", "work_order", "stage", "status", "attacks", "summary", "note"),
+        )
+    )
+    if extension_regression.get("work_order") != "WO-TABLEKEEPER-002":
+        errors.append("extension local regression: wrong work order")
+    if extension_regression.get("stage") != "verifier":
+        errors.append("extension local regression: stage must be verifier")
+    if extension_regression.get("source") != "local executable extension regression":
+        errors.append("extension local regression: source is invalid")
+    extension_attacks = extension_regression.get("attacks")
+    if not isinstance(extension_attacks, list) or len(extension_attacks) != 5:
+        errors.append("extension local regression: expected five attack results")
+    expected_extension_attacks = ["concurrency", "idempotency", "timezone", "invalid_input", "cancellation"]
+    if [item.get("name") for item in extension_attacks if isinstance(item, dict)] != expected_extension_attacks:
+        errors.append("extension local regression: attack order/names are invalid")
+    if any(item.get("status") != "passed" for item in extension_attacks if isinstance(item, dict)):
+        errors.append("extension local regression: every attack must pass")
+    extension_summary = extension_regression.get("summary", {})
+    errors.extend(
+        check_keys(
+            "extension regression summary",
+            extension_summary,
+            ("attacks", "failures", "result"),
+        )
+    )
+    if extension_summary.get("failures") != 0 or extension_summary.get("result") != "EXTENSION REGRESSION PASSED":
+        errors.append("extension local regression: recorded result is not a passing batch")
 
     run = load("factory/artifacts/run-template.json")
     errors.extend(
