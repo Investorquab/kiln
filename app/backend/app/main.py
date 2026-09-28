@@ -29,6 +29,8 @@ class Reservation(BaseModel):
     end_at: datetime
     guest_name: str
     idempotency_key: str
+    status: str
+    cancelled_at: datetime | None
 
 
 def canonical_utc(value: datetime) -> datetime:
@@ -95,6 +97,8 @@ def row_to_reservation(row) -> Reservation:
         end_at=row[3],
         guest_name=row[4],
         idempotency_key=row[5],
+        status=row[6],
+        cancelled_at=row[7],
     )
 
 
@@ -103,7 +107,7 @@ def list_reservations() -> list[Reservation]:
     with connection() as conn:
         rows = conn.execute(
             """
-            SELECT id, resource_id, start_at, end_at, guest_name, idempotency_key
+            SELECT id, resource_id, start_at, end_at, guest_name, idempotency_key, status, cancelled_at
             FROM reservations
             ORDER BY start_at, id
             """
@@ -151,7 +155,7 @@ def create_reservation(
 
                 existing = conn.execute(
                     """
-                    SELECT id, resource_id, start_at, end_at, guest_name, idempotency_key
+                    SELECT id, resource_id, start_at, end_at, guest_name, idempotency_key, status, cancelled_at
                     FROM reservations
                     WHERE idempotency_key = %s
                     """,
@@ -196,7 +200,7 @@ def create_reservation(
                     INSERT INTO reservations
                         (id, resource_id, start_at, end_at, guest_name, idempotency_key)
                     VALUES (%s, %s, %s, %s, %s, %s)
-                    RETURNING id, resource_id, start_at, end_at, guest_name, idempotency_key
+                    RETURNING id, resource_id, start_at, end_at, guest_name, idempotency_key, status, cancelled_at
                     """,
                     (
                         reservation_id,
