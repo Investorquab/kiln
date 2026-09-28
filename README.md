@@ -125,3 +125,25 @@ Only the verifier's passed artifact closes the run as `proved`.
 See `docs/BAND_RUNBOOK.md` for the actual room/seat workflow and `docs/FACTORY_FLOOR.md` for the factory model.
 
 The repository does not claim a live BAND run until one has actually been performed and recorded. The final submission needs the BAND Desktop room recording that generated the solution.
+
+
+## Tablekeeper extension: cancellation
+
+The second Tablekeeper workload extends the original booking guarantees with an idempotent cancellation state transition.
+
+The extension work order is `factory/work_orders/tablekeeper-cancellation.json`. It requires:
+
+- an active reservation can be cancelled exactly once;
+- replaying the same cancellation key has no second side effect;
+- missing reservations are rejected without state creation;
+- a cancellation key cannot target a different reservation;
+- cancelled reservations no longer block a replacement booking;
+- the original concurrency, idempotency, timezone, and invalid-input attacks still pass.
+
+The local extension regression runner is:
+
+```text
+python factory/runtime/execute_extension_regression.py
+```
+
+This produces local evidence only. It does not claim that BAND Desktop generated the run.
