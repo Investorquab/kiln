@@ -1,0 +1,46 @@
+{
+  "stage": "modeler",
+  "status": "passed",
+  "source": "local extension design review",
+  "work_order": "WO-TABLEKEEPER-002",
+  "invariants": [
+    {
+      "id": "CINV-001",
+      "statement": "A reservation transitions from active to cancelled at most once.",
+      "severity": "critical",
+      "executable_check": "competing cancellation requests"
+    },
+    {
+      "id": "CINV-002",
+      "statement": "Repeating the same cancellation idempotency key for the same reservation has no additional side effect.",
+      "severity": "critical",
+      "executable_check": "same-key concurrent replay"
+    },
+    {
+      "id": "CINV-003",
+      "statement": "A cancellation idempotency key cannot target a different reservation.",
+      "severity": "critical",
+      "executable_check": "same key, different reservation"
+    },
+    {
+      "id": "CINV-004",
+      "statement": "A nonexistent reservation cannot create cancellation state.",
+      "severity": "high",
+      "executable_check": "missing reservation cancellation"
+    },
+    {
+      "id": "CINV-005",
+      "statement": "Cancelled reservations are excluded from active overlap checks.",
+      "severity": "critical",
+      "executable_check": "cancel then rebook"
+    },
+    {
+      "id": "CINV-006",
+      "statement": "Original booking invariants remain true after the extension.",
+      "severity": "critical",
+      "executable_check": "five-attack extension regression"
+    }
+  ],
+  "handoff": "Builder implements the approved extension; Adversary targets every critical extension invariant.",
+  "note": "Local extension evidence only; not a BAND Desktop-generated stage."
+}
