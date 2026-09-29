@@ -394,5 +394,98 @@
   "limitations": [
     "The service and regression suite used local PostgreSQL schemas; clean-container behavior was not verified.",
     "This is not a BAND Desktop recording."
-  ]
+  ],
+  "integrator_independent_verification":   {
+    "stage": "verifier",
+    "status": "passed",
+    "operator": "quadribello3/integrator",
+    "run_id": "verifier-postrepair-20260929-integrator-fresh01",
+    "verified_revision": "c4de7a9e99c075508f6361fde1f574930f2da2ed",
+    "branch": "failure-repair/tablekeeper-20260927",
+    "regression": {
+      "command": "python -m pytest app/backend/tests/test_reservations.py -k changed_guest_replay_is_rejected_without_changing_state -q",
+      "exit_code": 0,
+      "output": "1 passed, 8 deselected, 2 warnings"
+    },
+    "baseline_check": {
+      "head_before": "c4de7a9e99c075508f6361fde1f574930f2da2ed",
+      "head_after": "c4de7a9e99c075508f6361fde1f574930f2da2ed",
+      "working_tree_before": "clean",
+      "working_tree_after": "clean",
+      "git_diff_exit_code": 0,
+      "git_diff_cached_exit_code": 0
+    },
+    "attack_batch": {
+      "command": "python verification/run_all.py",
+      "run_id": "verifier-postrepair-20260929-integrator-fresh01",
+      "environment": {
+        "DATABASE_URL": "postgresql://kiln:kiln@127.0.0.1:5432/kiln",
+        "PGOPTIONS": "-c search_path=kiln_failure_repair_20260927",
+        "PYTHONPATH": "app/backend",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "KILN_BASE_URL": "http://127.0.0.1:18082",
+        "KILN_ATTACK_RUN_ID": "verifier-postrepair-20260929-integrator-fresh01"
+      },
+      "service": "FastAPI at http://127.0.0.1:18082; health status ok",
+      "database": "PostgreSQL 16.15, database kiln, isolated schema kiln_failure_repair_20260927",
+      "exit_code": 0,
+      "stdout": [
+        "requests=50; created=1; conflicts=49; unexpected=0",
+        "replay_statuses=[201, 201, 201]; unique_reservation_ids=1; tampered_replay_status=409",
+        "first=201; equivalent=409",
+        "status=422; created_records=0",
+        "attacks=4; failures=0; VERIFICATION BATCH PASSED"
+      ],
+      "checks": [
+        {
+          "name": "concurrency",
+          "result": "passed",
+          "requests": 50,
+          "created": 1,
+          "conflicts": 49,
+          "unexpected": 0
+        },
+        {
+          "name": "idempotency",
+          "result": "passed",
+          "replay_statuses": [
+            201,
+            201,
+            201
+          ],
+          "unique_reservation_ids": 1,
+          "tampered_replay_status": 409
+        },
+        {
+          "name": "timezone",
+          "result": "passed",
+          "first_status": 201,
+          "equivalent_interval_status": 409
+        },
+        {
+          "name": "invalid_input",
+          "result": "passed",
+          "status_code": 422,
+          "created_records": 0
+        }
+      ],
+      "summary": {
+        "attacks": 4,
+        "failures": 0,
+        "result": "VERIFICATION BATCH PASSED"
+      }
+    },
+    "supporting_evidence": {
+      "fresh_adversary_operator": "quadribello3/investigator",
+      "fresh_adversary_revision": "c4de7a9e99c075508f6361fde1f574930f2da2ed",
+      "fresh_adversary_run_id": "investigator-postrepair-20260929-f593cb864b49463ab2363322b764a438",
+      "source": "Investigator room report",
+      "note": "Supporting evidence only. Integrator verification above is independently attributed. factory/artifacts/adversarial-repair-retest.json is excluded as provenance because it contains stale Test author / 50028b attribution."
+    },
+    "limitations": [
+      "Local PostgreSQL-backed verification only.",
+      "Docker clean-container behavior and BAND Desktop recording were not verified."
+    ],
+    "final_status": "passed"
+  }
 }

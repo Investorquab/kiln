@@ -1,0 +1,28 @@
+﻿{
+  "source": "BAND room execution report",
+  "source_operator": "quadribello3/investigator",
+  "run_id": "investigator-postrepair-20260929-f593cb864b49463ab2363322b764a438",
+  "tested_revision": "c4de7a9e99c075508f6361fde1f574930f2da2ed",
+  "concurrency": {
+    "requests": 50,
+    "created": 1,
+    "conflicts": 49,
+    "unexpected": 0
+  },
+  "idempotency": {
+    "replay_statuses": [201, 201, 201],
+    "unique_reservation_ids": 1,
+    "tampered_replay_status": 409
+  },
+  "timezone": {
+    "first_status": 201,
+    "equivalent_status": 409
+  },
+  "invalid_input": {
+    "status": 422,
+    "records": 0
+  },
+  "failures": 0,
+  "stale_repair_evidence_used": false,
+  "provenance_note": "The results were reported by quadribello3/investigator in the BAND room and captured by quadribello3/integrator for repository inspection. This file is Integrator's evidence capture of the room report; it is not claimed to have been created by Investigator."
+}
