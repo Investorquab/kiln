@@ -57,7 +57,7 @@ The demo runtime publishes explicit resource and concurrency constraints:
 | Backend | 1.0 CPU | 512 MiB |
 | Frontend | 1.0 CPU | 512 MiB |
 
-The Compose runtime network is marked `internal: true`. This preserves container-to-container service discovery while removing the runtime network's default external connectivity. Host access to the published application ports remains available for the demo.
+The Compose runtime network is marked `internal: true`. This preserves container-to-container service discovery while removing the runtime network's default external connectivity. Because the Compose network is internal, the services are verified from inside the runtime network (and through container IPs); do not rely on localhost published-port access for the clean-container proof.
 
 The adversarial verification contract uses **50 concurrent requests** against the same resource/time slot. The expected result is exactly one committed reservation and 49 conflicts, with zero unexpected outcomes. The suite also verifies idempotency replay, equivalent timezone representations, and invalid input.
 
@@ -125,3 +125,25 @@ Only the verifier's passed artifact closes the run as `proved`.
 See `docs/BAND_RUNBOOK.md` for the actual room/seat workflow and `docs/FACTORY_FLOOR.md` for the factory model.
 
 The repository does not claim a live BAND run until one has actually been performed and recorded. The final submission needs the BAND Desktop room recording that generated the solution.
+
+
+## Tablekeeper extension: cancellation
+
+The second Tablekeeper workload extends the original booking guarantees with an idempotent cancellation state transition.
+
+The extension work order is `factory/work_orders/tablekeeper-cancellation.json`. It requires:
+
+- an active reservation can be cancelled exactly once;
+- replaying the same cancellation key has no second side effect;
+- missing reservations are rejected without state creation;
+- a cancellation key cannot target a different reservation;
+- cancelled reservations no longer block a replacement booking;
+- the original concurrency, idempotency, timezone, and invalid-input attacks still pass.
+
+The local extension regression runner is:
+
+```text
+python factory/runtime/execute_extension_regression.py
+```
+
+This produces local evidence only. It does not claim that BAND Desktop generated the run.

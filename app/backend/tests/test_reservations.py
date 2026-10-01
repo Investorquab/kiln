@@ -18,7 +18,7 @@ client = TestClient(app)
 def setup_function() -> None:
     ensure_schema()
     with connection() as conn:
-        conn.execute("TRUNCATE reservations")
+        conn.execute("TRUNCATE cancellation_requests, reservations")
         conn.commit()
 
 
@@ -116,3 +116,107 @@ def test_same_idempotency_key_across_resources_is_rejected():
 
     assert r1.status_code == 201
     assert r2.status_code == 409
+
+
+def test_cancellation_is_idempotent():
+    created = client.post(
+        "/reservations",
+        json=payload(),
+        headers={"Idempotency-Key": "cancel-create"},
+    )
+    reservation_id = created.json()["id"]
+
+    first = client.delete(
+        f"/reservations/{reservation_id}",
+        headers={"Idempotency-Key": "cancel-1"},
+    )
+    retry = client.delete(
+        f"/reservations/{reservation_id}",
+        headers={"Idempotency-Key": "cancel-1"},
+    )
+
+    assert created.status_code == 201
+    assert first.status_code == 204
+    assert retry.status_code == 204
+
+    with connection() as conn:
+        row = conn.execute(
+            "SELECT status FROM reservations WHERE id = %s",
+            (reservation_id,),
+        ).fetchone()
+    assert row[0] == "cancelled"
+
+    listed = client.get("/reservations")
+    assert listed.status_code == 200
+    assert listed.json()[0]["status"] == "cancelled"
+    assert listed.json()[0]["cancelled_at"] is not None
+
+
+def test_cancellation_key_cannot_target_different_reservation():
+    first = client.post(
+        "/reservations",
+        json=payload(),
+        headers={"Idempotency-Key": "cancel-a-create"},
+    )
+    second_payload = {
+        **payload(),
+        "resource_id": "table-2",
+        "guest_name": "Second Guest",
+    }
+    second = client.post(
+        "/reservations",
+        json=second_payload,
+        headers={"Idempotency-Key": "cancel-b-create"},
+    )
+
+    first_id = first.json()["id"]
+    second_id = second.json()["id"]
+
+    cancelled = client.delete(
+        f"/reservations/{first_id}",
+        headers={"Idempotency-Key": "cancel-same-key"},
+    )
+    wrong_target = client.delete(
+        f"/reservations/{second_id}",
+        headers={"Idempotency-Key": "cancel-same-key"},
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert cancelled.status_code == 204
+    assert wrong_target.status_code == 409
+
+
+def test_cancelling_missing_reservation_does_not_create_state():
+    import uuid
+
+    missing = client.delete(
+        f"/reservations/{uuid.uuid4()}",
+        headers={"Idempotency-Key": "cancel-missing"},
+    )
+
+    assert missing.status_code == 404
+    assert client.get("/reservations").json() == []
+
+
+def test_cancelled_reservation_no_longer_blocks_new_booking():
+    created = client.post(
+        "/reservations",
+        json=payload(),
+        headers={"Idempotency-Key": "cancel-rebook-create"},
+    )
+    reservation_id = created.json()["id"]
+
+    cancelled = client.delete(
+        f"/reservations/{reservation_id}",
+        headers={"Idempotency-Key": "cancel-rebook"},
+    )
+    replacement = client.post(
+        "/reservations",
+        json=payload(),
+        headers={"Idempotency-Key": "replacement-booking"},
+    )
+
+    assert created.status_code == 201
+    assert cancelled.status_code == 204
+    assert replacement.status_code == 201
